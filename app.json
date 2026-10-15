@@ -1,32 +1,38 @@
 {
   "expo": {
-    "name": "Pulse Pay",
-    "slug": "pulse-pay",
-    "version": "1.0.0",
+    "name": "JustPay",
+    "slug": "justpay",
+    "version": "3.0.0",
     "orientation": "portrait",
-    "scheme": "pulsepay",
+    "scheme": "justpay",
     "userInterfaceStyle": "dark",
     "newArchEnabled": false,
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0B0B0D"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.demo.pulsepay"
+      "bundleIdentifier": "com.demo.justpay"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B0B0D"
+        "backgroundColor": "#0A0A1A"
       },
-      "package": "com.demo.pulsepay"
+      "package": "com.demo.justpay"
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow JustPay to access your photos for a demo profile picture."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

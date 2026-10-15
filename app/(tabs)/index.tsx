@@ -6,6 +6,7 @@ import {
   ScrollView,
   ImageBackground,
   Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,13 +23,15 @@ import {
 import { TransactionRow } from '../../src/components/TransactionRow';
 import { PressableScale } from '../../src/components/PressableScale';
 import { MerchantLogo } from '../../src/components/MerchantLogo';
+import { useAppStore } from '../../src/store/AppStore';
 
 const { width: W } = Dimensions.get('window');
 const HERO_H = Math.min(420, W * 1.05);
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { whole, cents } = formatBalanceParts(DEMO_BALANCE);
+  const { state } = useAppStore();
+  const { whole, cents } = formatBalanceParts(state.cash);
 
   return (
     <View style={styles.root}>
@@ -54,7 +57,11 @@ export default function HomeScreen() {
                 style={styles.avatar}
                 onPress={() => router.push('/settings')}
               >
-                <Ionicons name="person" size={18} color={colors.textPrimary} />
+                {state.profile.avatarUri ? (
+                  <Image source={{ uri: state.profile.avatarUri }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+                ) : (
+                  <Ionicons name="person" size={18} color={colors.textPrimary} />
+                )}
               </PressableScale>
               <PressableScale hitSlop={12}>
                 <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />

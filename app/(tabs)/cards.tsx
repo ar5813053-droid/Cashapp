@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
-import { CARDS } from '../../src/mock-data';
+import { useAppStore } from '../../src/store/AppStore';
 import { VirtualCardView } from '../../src/components/VirtualCard';
 import { PressableScale } from '../../src/components/PressableScale';
 import type { VirtualCard } from '../../src/types';
@@ -11,11 +11,12 @@ import type { VirtualCard } from '../../src/types';
 const CARD_W = Dimensions.get('window').width - layout.screenPadding * 2;
 
 export default function CardsScreen() {
-  const [cards, setCards] = useState<VirtualCard[]>(CARDS);
+  const { state, setCards } = useAppStore();
+  const cards = state.cards;
 
   const toggleFreeze = (id: string) => {
-    setCards((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c))
+    setCards(
+      cards.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c))
     );
   };
 

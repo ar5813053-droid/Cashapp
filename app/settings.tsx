@@ -1,38 +1,51 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Alert,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { colors, spacing, radii, typography, layout } from '../src/design/tokens';
 import { PressableScale } from '../src/components/PressableScale';
+import { useAppStore } from '../src/store/AppStore';
 
-function Row({
-  label,
-  value,
-  onValueChange,
-}: {
-  label: string;
-  value: boolean;
-  onValueChange: (v: boolean) => void;
-}) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: '#333', true: colors.accentGreen }}
-        thumbColor="#fff"
-      />
-    </View>
-  );
-}
+const ACCENTS = ['#3B82F6', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4'];
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [dark, setDark] = useState(true);
-  const [motion, setMotion] = useState(true);
-  const [haptics, setHaptics] = useState(true);
+  const { state, setProfile, setStartingCash, resetPortfolio } = useAppStore();
+  const [name, setName] = useState(state.profile.displayName);
+  const [user, setUser] = useState(state.profile.username);
+  const [start, setStart] = useState(String(state.startingCash));
+
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!res.canceled && res.assets[0]?.uri) {
+      setProfile({ avatarUri: res.assets[0].uri });
+    }
+  };
+
+  const save = () => {
+    setProfile({
+      displayName: name.trim() || 'Alex',
+      username: user.trim().startsWith('@') ? user.trim() : `@${user.trim() || 'user'}`,
+    });
+    const n = parseFloat(start);
+    if (Number.isFinite(n) && n >= 0) setStartingCash(n);
+    Alert.alert('Saved', 'Local demo profile updated.');
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -40,27 +53,74 @@ export default function SettingsScreen() {
         <PressableScale onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </PressableScale>
-        <Text style={styles.title}>Settings</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.title}>Profile</Text>
+        <PressableScale onPress={save}>
+          <Text style={styles.save}>Save</Text>
+        </PressableScale>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.section}>Appearance</Text>
-        <View style={styles.group}>
-          <Row label="Dark theme" value={dark} onValueChange={setDark} />
+        <PressableScale style={styles.avatarWrap} onPress={pickPhoto}>
+          {state.profile.avatarUri ? (
+            <Image source={{ uri: state.profile.avatarUri }} style={styles.avatarImg} />
+          ) : (
+            <View style={[styles.avatarImg, { backgroundColor: state.profile.accent }]}>
+              <Text style={styles.avatarLetter}>
+                {(name || 'A').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.changePhoto}>Change photo</Text>
+        </PressableScale>
+
+        <Text style={styles.label}>Display name</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor="#666" />
+
+        <Text style={styles.label}>Username</Text>
+        <TextInput style={styles.input} value={user} onChangeText={setUser} placeholderTextColor="#666" />
+
+        <Text style={styles.label}>Accent</Text>
+        <View style={styles.row}>
+          {ACCENTS.map((c) => (
+            <PressableScale
+              key={c}
+              onPress={() => setProfile({ accent: c })}
+              style={[
+                styles.swatch,
+                { backgroundColor: c },
+                state.profile.accent === c && styles.swatchOn,
+              ]}
+            />
+          ))}
         </View>
-        <Text style={styles.section}>Motion</Text>
-        <View style={styles.group}>
-          <Row label="Animations" value={motion} onValueChange={setMotion} />
-          <Row label="Haptics (UI only)" value={haptics} onValueChange={setHaptics} />
-        </View>
-        <Text style={styles.section}>About this app</Text>
-        <View style={styles.group}>
-          <Text style={styles.about}>
-            Pulse Pay is a simulation for design and interaction demos. Balances,
-            cards, recipients, and transfers are sample data. No real money moves
-            and no bank accounts are connected.
-          </Text>
-        </View>
+
+        <Text style={styles.label}>Starting virtual cash (USD)</Text>
+        <TextInput
+          style={styles.input}
+          value={start}
+          onChangeText={setStart}
+          keyboardType="decimal-pad"
+          placeholderTextColor="#666"
+        />
+        <Text style={styles.hint}>
+          Virtual Cash: ${state.cash.toFixed(2)} · Starting: ${state.startingCash.toFixed(2)}
+        </Text>
+
+        <PressableScale
+          style={styles.danger}
+          onPress={() =>
+            Alert.alert('Reset demo portfolio?', 'Clears positions and restores starting cash.', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Reset', style: 'destructive', onPress: resetPortfolio },
+            ])
+          }
+        >
+          <Text style={styles.dangerText}>Reset demo portfolio</Text>
+        </PressableScale>
+
+        <Text style={styles.about}>
+          JustPay is a simulation. Balances, cards, and trades are virtual. Market prices may come
+          from public APIs and can be delayed or cached. No real money moves.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -76,33 +136,43 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   title: { ...typography.title, color: colors.textPrimary, fontSize: 22 },
-  content: {
-    padding: layout.screenPadding,
-    paddingBottom: layout.bottomNavHeight + 24,
+  save: { ...typography.label, color: '#60A5FA' },
+  content: { padding: layout.screenPadding, paddingBottom: 40 },
+  avatarWrap: { alignItems: 'center', marginVertical: spacing.xl },
+  avatarImg: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  section: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+  avatarLetter: { fontSize: 36, fontWeight: '700', color: '#fff' },
+  changePhoto: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
+  label: { ...typography.caption, color: colors.textMuted, marginTop: spacing.lg, marginBottom: 6 },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    color: colors.textPrimary,
+    ...typography.body,
   },
-  group: {
-    backgroundColor: colors.bgCard,
+  row: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  swatch: { width: 32, height: 32, borderRadius: 16 },
+  swatchOn: { borderWidth: 2, borderColor: '#fff' },
+  hint: { ...typography.micro, color: colors.textMuted, marginTop: spacing.sm },
+  danger: {
+    marginTop: spacing.xxl,
+    backgroundColor: 'rgba(239,68,68,0.15)',
     borderRadius: radii.lg,
     padding: spacing.lg,
-    gap: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  rowLabel: { ...typography.body, color: colors.textPrimary },
+  dangerText: { ...typography.label, color: '#F87171' },
   about: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: colors.textMuted,
+    marginTop: spacing.xxl,
     lineHeight: 20,
   },
 });
