@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, FlatList, TextInput, Pressable } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
-import { TRANSACTIONS } from '../../src/mock-data';
-import { TransactionRow } from '../../src/components/TransactionRow';
-import { DemoBanner } from '../../src/components/DemoBanner';
+import { colors, spacing, radii, typography, layout } from '../src/design/tokens';
+import { TRANSACTIONS } from '../src/mock-data';
+import { TransactionRow } from '../src/components/TransactionRow';
+import { DemoBanner } from '../src/components/DemoBanner';
 
 export default function ActivityScreen() {
   const router = useRouter();

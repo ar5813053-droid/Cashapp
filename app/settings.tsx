@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, Switch, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
-import { PressableScale } from '../../src/components/PressableScale';
+import { colors, spacing, radii, typography, layout } from '../src/design/tokens';
+import { PressableScale } from '../src/components/PressableScale';
 
 function Row({
   label,
