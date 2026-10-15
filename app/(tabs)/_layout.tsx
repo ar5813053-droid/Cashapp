@@ -1,23 +1,36 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { withLayoutContext } from 'expo-router';
+import {
+  createMaterialTopTabNavigator,
+  type MaterialTopTabNavigationOptions,
+} from '@react-navigation/material-top-tabs';
 import { FloatingTabBar } from '../../src/components/FloatingTabBar';
+import { colors } from '../../src/design/tokens';
+
+const { Navigator } = createMaterialTopTabNavigator();
+
+const MaterialTopTabs = withLayoutContext<
+  MaterialTopTabNavigationOptions,
+  typeof Navigator
+>(Navigator);
 
 export default function TabsLayout() {
   return (
-    <Tabs
+    <MaterialTopTabs
       tabBar={(props) => <FloatingTabBar {...props} />}
+      tabBarPosition="bottom"
+      initialRouteName="index"
       screenOptions={{
-        headerShown: false,
-        // Keep screens mounted so returning doesn't always re-run entrance animations
+        swipeEnabled: true,
+        animationEnabled: true,
         lazy: false,
+        sceneStyle: { backgroundColor: colors.bg },
       }}
     >
-      <Tabs.Screen name="recipients" options={{ title: 'Recipients' }} />
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="cards" options={{ title: 'Cards' }} />
-      <Tabs.Screen name="market" options={{ title: 'Market' }} />
-      <Tabs.Screen name="activity" options={{ href: null }} />
-      <Tabs.Screen name="settings" options={{ href: null }} />
-    </Tabs>
+      <MaterialTopTabs.Screen name="recipients" options={{ title: 'Recipients' }} />
+      <MaterialTopTabs.Screen name="index" options={{ title: 'Home' }} />
+      <MaterialTopTabs.Screen name="cards" options={{ title: 'Cards' }} />
+      <MaterialTopTabs.Screen name="market" options={{ title: 'Market' }} />
+    </MaterialTopTabs>
   );
 }

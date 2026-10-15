@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { VirtualCard } from '../types';
@@ -14,10 +14,10 @@ type Props = {
   onToggleFreeze?: () => void;
 };
 
-function glowColor(c: string) {
-  if (c === colors.cardYellow) return 'rgba(245,231,74,0.45)';
-  if (c === colors.cardMint) return 'rgba(61,223,176,0.45)';
-  return 'rgba(59,130,246,0.45)';
+function borderGlow(c: string) {
+  if (c === colors.cardYellow) return { border: '#FFF6A0', glow: 'rgba(245,231,74,0.55)' };
+  if (c === colors.cardMint) return { border: '#A8FFE0', glow: 'rgba(61,223,176,0.5)' };
+  return { border: '#93C5FD', glow: 'rgba(59,130,246,0.55)' };
 }
 
 export function VirtualCardView({
@@ -27,53 +27,65 @@ export function VirtualCardView({
   showActions,
   onToggleFreeze,
 }: Props) {
+  const g = borderGlow(card.color);
   return (
     <View style={[styles.wrap, { width }]}>
       <View
         style={[
           styles.glow,
           {
-            width: width * 0.92,
-            height: height * 0.7,
-            backgroundColor: glowColor(card.color),
+            width: width * 0.94,
+            height: height * 0.55,
+            backgroundColor: g.glow,
           },
         ]}
       />
-      <LinearGradient
-        colors={[card.color, blend(card.color)]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <View
         style={[
-          styles.card,
+          styles.borderShell,
           {
             width,
-            height,
-            opacity: card.frozen ? 0.72 : 1,
+            borderColor: g.border,
+            opacity: card.frozen ? 0.75 : 1,
+            ...Platform.select({
+              ios: {
+                shadowColor: g.border,
+                shadowOpacity: 0.55,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 4 },
+              },
+              android: { elevation: 8 },
+            }),
           },
         ]}
       >
-        <View style={styles.row}>
-          <Text style={[styles.label, { color: card.textColor }]}>{card.label}</Text>
-          <Text style={[styles.last4, { color: card.textColor }]}>···· {card.last4}</Text>
-        </View>
-        <View style={styles.bottom}>
-          {showActions && (
-            <View style={styles.actions}>
-              <Action icon="snow-outline" />
-              <Action icon="card-outline" />
-              <Action icon="settings-outline" />
-            </View>
-          )}
-          {showActions && (
-            <Switch
-              value={!card.frozen}
-              onValueChange={onToggleFreeze}
-              trackColor={{ false: 'rgba(0,0,0,0.25)', true: 'rgba(255,255,255,0.55)' }}
-              thumbColor="#fff"
-            />
-          )}
-        </View>
-      </LinearGradient>
+        <LinearGradient
+          colors={[card.color, card.color]}
+          style={[styles.card, { height: height - 4 }]}
+        >
+          <View style={styles.row}>
+            <Text style={[styles.label, { color: card.textColor }]}>{card.label}</Text>
+            <Text style={[styles.last4, { color: card.textColor }]}>···· {card.last4}</Text>
+          </View>
+          <View style={styles.bottom}>
+            {showActions && (
+              <View style={styles.actions}>
+                <Action icon="snow-outline" />
+                <Action icon="card-outline" />
+                <Action icon="settings-outline" />
+              </View>
+            )}
+            {showActions && (
+              <Switch
+                value={!card.frozen}
+                onValueChange={onToggleFreeze}
+                trackColor={{ false: 'rgba(0,0,0,0.25)', true: 'rgba(255,255,255,0.55)' }}
+                thumbColor="#fff"
+              />
+            )}
+          </View>
+        </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -86,27 +98,23 @@ function Action({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   );
 }
 
-function blend(hex: string) {
-  // slightly darker end for gradient depth
-  return hex;
-}
-
 const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
+  wrap: { alignItems: 'center', marginBottom: spacing.xl },
   glow: {
     position: 'absolute',
-    bottom: 4,
+    bottom: 2,
     borderRadius: 40,
-    opacity: 0.85,
+  },
+  borderShell: {
+    borderRadius: radii.card,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   card: {
-    borderRadius: radii.card,
+    borderRadius: radii.card - 1,
     padding: spacing.lg,
     justifyContent: 'space-between',
-    overflow: 'hidden',
   },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   label: { ...typography.section, fontWeight: '700' },

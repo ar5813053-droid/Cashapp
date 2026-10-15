@@ -16,10 +16,12 @@ export default function RootLayout() {
             headerShown: false,
             contentStyle: { backgroundColor: colors.bg },
             animation: 'fade_from_bottom',
-            animationDuration: 300,
+            animationDuration: 280,
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="activity" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen
             name="payments/amount"
             options={{
