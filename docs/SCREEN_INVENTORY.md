@@ -1,26 +1,16 @@
 # Screen inventory & visual corrections
 
-Demo UI only — not a real bank. Reference: product walkthrough video (~15s).
+Demo UI only — not a real bank.
 
-## Screens
+## Cards carousel (commit b77c12d)
 
-| Screen | Route | Notes |
-|--------|-------|-------|
-| Home | `/(tabs)` | Balance, spending+avatars, fanned cards, transactions sheet |
-| Cards | `/(tabs)/cards` | Digital cards + freeze |
-| Recipients | `/(tabs)/recipients` | Grid + list → payment |
-| Amount | `/payments/amount` | Keypad + operators |
-| Confirm | `/payments/confirm` | Swipe to confirm |
-| Success | `/payments/success` | Green check |
-| Activity | `/(tabs)/activity` | Search + rows |
-| Settings | `/(tabs)/settings` | Demo toggles |
-
-## This polish pass
-
-- Home: spending avatar cluster, larger fanned card stack (`app/(tabs)/index.tsx`)
-- Amounts: `-60 $` style (`src/mock-data/index.ts`)
-- Reduced motion hook (`src/animations/reducedMotion.ts`)
+- Horizontal spring-snap carousel (Reanimated + Gesture Handler)
+- Scale / rotate / opacity on adjacent cards
+- Pagination dots + selected card detail panel
+- Reduced-motion softer springs
+- Freeze toggle still works on active card chrome
 
 ## Remaining gaps
 
-Not pixel-perfect; initials not photos; system fonts on Android; no full physics card carousel.
+- Device swipe not verified in this environment (npm registry 502 blocked install)
+- EAS APK requires Expo login / EXPO_TOKEN (not available here)
