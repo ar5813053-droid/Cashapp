@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Pulse Pay",
+    "slug": "pulse-pay",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "pulsepay",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#0B0B0D"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.demo.pulsepay"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B0D"
+      },
+      "package": "com.demo.pulsepay"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
