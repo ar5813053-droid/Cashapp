@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   TextInput,
-  FlatList,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -14,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { RECIPIENTS, LINKED_ACCOUNTS } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
-import { DemoBanner } from '../../src/components/DemoBanner';
+import { PressableScale } from '../../src/components/PressableScale';
 
 export default function RecipientsScreen() {
   const router = useRouter();
@@ -22,10 +21,14 @@ export default function RecipientsScreen() {
   const [tab, setTab] = useState<'all' | 'accounts'>('all');
   const [query, setQuery] = useState('');
 
-  const filtered = RECIPIENTS.filter(
-    (r) =>
-      r.name.toLowerCase().includes(query.toLowerCase()) ||
-      r.handle.toLowerCase().includes(query.toLowerCase())
+  const filtered = useMemo(
+    () =>
+      RECIPIENTS.filter(
+        (r) =>
+          r.name.toLowerCase().includes(query.toLowerCase()) ||
+          r.handle.toLowerCase().includes(query.toLowerCase())
+      ),
+    [query]
   );
 
   const selectRecipient = (id: string) => {
@@ -37,18 +40,23 @@ export default function RecipientsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Recipients</Text>
-        <Pressable style={styles.addBtn} accessibilityLabel="Add recipient">
+        <PressableScale
+          style={styles.addBtn}
+          accessibilityLabel="Add recipient"
+          onPress={() =>
+            Alert.alert(
+              'Add recipient',
+              'Demo only — contact list is local sample data. Real contacts are not imported.'
+            )
+          }
+        >
           <Text style={styles.addText}>Add</Text>
-        </Pressable>
-      </View>
-      <View style={styles.demo}>
-        <DemoBanner compact />
+        </PressableScale>
       </View>
 
-      {/* Contact grid */}
       <View style={styles.grid}>
         {RECIPIENTS.map((r) => (
-          <Pressable
+          <PressableScale
             key={r.id}
             style={styles.contact}
             onPress={() => selectRecipient(r.id)}
@@ -63,24 +71,23 @@ export default function RecipientsScreen() {
             <Text style={styles.contactHandle} numberOfLines={1}>
               {r.handle}
             </Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
 
-      {/* Bottom sheet list */}
       <View style={styles.sheet}>
         <View style={styles.tabs}>
-          <Pressable onPress={() => setTab('all')} style={styles.tab}>
+          <PressableScale onPress={() => setTab('all')} style={styles.tab}>
             <Text style={[styles.tabText, tab === 'all' && styles.tabActive]}>All</Text>
-          </Pressable>
-          <Pressable onPress={() => setTab('accounts')} style={styles.tab}>
+          </PressableScale>
+          <PressableScale onPress={() => setTab('accounts')} style={styles.tab}>
             <Text style={[styles.tabText, tab === 'accounts' && styles.tabActive]}>
               My accounts
             </Text>
-          </Pressable>
+          </PressableScale>
           <Ionicons
             name="search"
-            size={18}
+            size={16}
             color={colors.textDarkMuted}
             style={{ marginLeft: 'auto' }}
           />
@@ -97,7 +104,7 @@ export default function RecipientsScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {tab === 'all'
             ? filtered.map((r) => (
-                <Pressable
+                <PressableScale
                   key={r.id}
                   style={styles.row}
                   onPress={() => selectRecipient(r.id)}
@@ -109,22 +116,29 @@ export default function RecipientsScreen() {
                     <Text style={styles.rowName}>{r.name}</Text>
                     <Text style={styles.rowSub}>{r.handle}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textDarkMuted} />
-                </Pressable>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textDarkMuted} />
+                </PressableScale>
               ))
             : LINKED_ACCOUNTS.map((a) => (
-                <Pressable key={a.id} style={styles.row} onPress={() => selectRecipient(a.id)}>
+                <PressableScale
+                  key={a.id}
+                  style={styles.row}
+                  onPress={() => selectRecipient(a.id)}
+                >
                   <View style={[styles.rowAvatar, { backgroundColor: a.avatarColor }]}>
                     <Text style={styles.rowInitials}>{a.initials}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowName}>{a.name}</Text>
                     <Text style={styles.rowSub}>
-                      {a.bank} {a.last4}
+                      {a.bank} ··· {a.last4}
                     </Text>
                   </View>
-                </Pressable>
+                </PressableScale>
               ))}
+          {tab === 'all' && filtered.length === 0 && (
+            <Text style={styles.empty}>No recipients match your search.</Text>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -144,11 +158,11 @@ const styles = StyleSheet.create({
   addBtn: {
     backgroundColor: colors.pill,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    height: 36,
     borderRadius: radii.full,
+    justifyContent: 'center',
   },
   addText: { ...typography.label, color: colors.textPrimary },
-  demo: { marginTop: spacing.sm, alignItems: 'center' },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -159,7 +173,7 @@ const styles = StyleSheet.create({
   contact: {
     width: '30%',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   avatar: {
     width: layout.avatarSize,
@@ -168,20 +182,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
+  initials: { fontSize: 18, fontWeight: '700', color: '#fff' },
   contactName: {
     ...typography.caption,
     color: colors.textPrimary,
     marginTop: spacing.sm,
   },
-  contactHandle: {
-    ...typography.micro,
-    color: colors.textMuted,
-  },
+  contactHandle: { ...typography.micro, color: colors.textMuted },
   sheet: {
     flex: 1,
     marginTop: spacing.lg,
@@ -190,7 +197,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radii.sheet,
     paddingHorizontal: layout.screenPadding,
     paddingTop: spacing.lg,
-    paddingBottom: layout.bottomNavHeight + 16,
+    paddingBottom: layout.bottomNavHeight + 20,
   },
   tabs: {
     flexDirection: 'row',
@@ -217,13 +224,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   rowAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowInitials: { fontWeight: '700', color: '#fff', fontSize: 14 },
+  rowInitials: { fontWeight: '700', color: '#fff', fontSize: 13 },
   rowName: { ...typography.body, color: colors.textDark },
   rowSub: { ...typography.caption, color: colors.textDarkMuted },
+  empty: {
+    ...typography.caption,
+    color: colors.textDarkMuted,
+    textAlign: 'center',
+    marginTop: spacing.xxl,
+  },
 });

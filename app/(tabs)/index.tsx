@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,11 +11,9 @@ import {
   TRANSACTIONS,
   formatBalanceParts,
 } from '../../src/mock-data';
-import { VirtualCardView } from '../../src/components/VirtualCard';
 import { TransactionRow } from '../../src/components/TransactionRow';
-import { DemoBanner } from '../../src/components/DemoBanner';
-
-const { width: SCREEN_W } = Dimensions.get('window');
+import { PressableScale } from '../../src/components/PressableScale';
+import { MerchantLogo } from '../../src/components/MerchantLogo';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,25 +25,19 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <Pressable
+          <PressableScale
             style={styles.avatar}
             onPress={() => router.push('/(tabs)/settings')}
             accessibilityLabel="Profile and settings"
           >
-            <Ionicons name="person" size={20} color={colors.textPrimary} />
-          </Pressable>
-          <Pressable hitSlop={12} accessibilityLabel="Notifications">
-            <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
-          </Pressable>
+            <Ionicons name="person" size={18} color={colors.textPrimary} />
+          </PressableScale>
+          <PressableScale hitSlop={12} accessibilityLabel="Notifications">
+            <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
+          </PressableScale>
         </View>
 
-        <View style={styles.demoRow}>
-          <DemoBanner compact />
-        </View>
-
-        {/* Balance */}
         <Text style={styles.balanceLabel}>Total balance</Text>
         <View style={styles.balanceRow}>
           <Text style={styles.balanceDollar}>$</Text>
@@ -60,50 +45,39 @@ export default function HomeScreen() {
           <Text style={styles.balanceCents}>{cents}</Text>
         </View>
 
-        {/* Send / Request */}
         <View style={styles.actions}>
-          <Pressable
+          <PressableScale
             style={styles.pillBtn}
             onPress={() => router.push('/(tabs)/recipients')}
-            accessibilityLabel="Send money"
+            accessibilityLabel="Send"
           >
-            <Ionicons name="arrow-up" size={16} color={colors.textPrimary} />
+            <Ionicons name="arrow-up" size={15} color={colors.textPrimary} />
             <Text style={styles.pillText}>Send</Text>
-          </Pressable>
-          <Pressable
+          </PressableScale>
+          <PressableScale
             style={styles.pillBtn}
             onPress={() => router.push('/(tabs)/recipients')}
-            accessibilityLabel="Request money"
+            accessibilityLabel="Request"
           >
             <Text style={styles.pillText}>Request</Text>
-          </Pressable>
+          </PressableScale>
         </View>
 
-        {/* Spending pill + fanned card stack (reference layout) */}
         <View style={styles.midRow}>
           <View style={styles.spendingCard}>
             <View style={{ flex: 1 }}>
               <Text style={styles.spendingLabel}>Spending</Text>
-              <Text style={styles.spendingValue}>
-                ${DEMO_SPENDING.toLocaleString()}
-              </Text>
+              <Text style={styles.spendingValue}>${DEMO_SPENDING.toLocaleString()}</Text>
             </View>
-            <View style={styles.avatarCluster}>
-              {['#34D399', '#F97316', '#60A5FA'].map((c, i) => (
-                <View
-                  key={c}
-                  style={[
-                    styles.miniAvatar,
-                    { backgroundColor: c, marginLeft: i === 0 ? 0 : -10, zIndex: 3 - i },
-                  ]}
-                />
+            <View style={styles.merchantCluster}>
+              {['Apple', 'Threads', 'Exoplan'].map((m, i) => (
+                <View key={m} style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 3 - i }}>
+                  <MerchantLogo merchant={m} size={28} />
+                </View>
               ))}
-              <View style={[styles.miniAvatar, styles.plusAvatar, { marginLeft: -10 }]}>
-                <Text style={styles.plusText}>+2</Text>
-              </View>
             </View>
           </View>
-          <Pressable
+          <PressableScale
             style={styles.cardStack}
             onPress={() => router.push('/(tabs)/cards')}
             accessibilityLabel="View cards"
@@ -115,34 +89,31 @@ export default function HomeScreen() {
                   styles.stackCard,
                   {
                     backgroundColor: c.color,
-                    top: i * 6,
-                    right: i * 8,
+                    top: i * 5,
+                    right: i * 7,
                     zIndex: 3 - i,
-                    transform: [{ rotate: `${8 - i * 6}deg` }],
+                    transform: [{ rotate: `${7 - i * 5}deg` }],
                   },
                 ]}
               />
             ))}
-          </Pressable>
+          </PressableScale>
         </View>
 
-        {/* Transactions sheet */}
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
-            <Ionicons name="menu" size={20} color={colors.textDarkMuted} />
             <Text style={styles.sheetTitle}>Transactions</Text>
-            <Ionicons name="search" size={20} color={colors.textDarkMuted} />
+            <PressableScale onPress={() => router.push('/(tabs)/activity')}>
+              <Ionicons name="search" size={18} color={colors.textDarkMuted} />
+            </PressableScale>
           </View>
           {TRANSACTIONS.map((t) => (
             <TransactionRow key={t.id} item={t} />
           ))}
-          <Pressable
-            style={styles.seeAll}
-            onPress={() => router.push('/(tabs)/activity')}
-          >
+          <PressableScale style={styles.seeAll} onPress={() => router.push('/(tabs)/activity')}>
             <Text style={styles.seeAllText}>See all activity</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -153,7 +124,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: {
     paddingHorizontal: layout.screenPadding,
-    paddingBottom: layout.bottomNavHeight + 40,
+    paddingBottom: layout.bottomNavHeight + 36,
   },
   header: {
     flexDirection: 'row',
@@ -162,18 +133,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.bgCard,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  demoRow: { marginTop: spacing.md, marginBottom: spacing.sm },
   balanceLabel: {
     ...typography.caption,
     color: colors.textSecondary,
-    marginTop: spacing.md,
+    marginTop: spacing.xl,
   },
   balanceRow: {
     flexDirection: 'row',
@@ -181,7 +151,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   balanceDollar: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '600',
     color: colors.textPrimary,
     marginTop: 8,
@@ -192,7 +162,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   balanceCents: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '600',
     color: colors.textSecondary,
     marginTop: 10,
@@ -200,7 +170,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
   },
   pillBtn: {
     flexDirection: 'row',
@@ -208,7 +178,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: colors.pill,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    height: 40,
     borderRadius: radii.full,
   },
   pillText: {
@@ -240,66 +210,42 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: 2,
   },
-  avatarCluster: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  miniAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: colors.bgCard,
-  },
-  plusAvatar: {
-    backgroundColor: colors.bgElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  plusText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  cardStack: {
-    width: 100,
-    height: 72,
-  },
+  merchantCluster: { flexDirection: 'row', alignItems: 'center' },
+  cardStack: { width: 88, height: 64 },
   stackCard: {
     position: 'absolute',
-    width: 78,
-    height: 52,
-    borderRadius: 12,
+    width: 70,
+    height: 46,
+    borderRadius: 10,
   },
   sheet: {
     marginTop: spacing.xxl,
     backgroundColor: colors.bgSheet,
     borderRadius: radii.sheet,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
-    minHeight: 320,
+    paddingBottom: spacing.lg,
   },
   sheetHandle: {
     alignSelf: 'center',
-    width: 36,
+    width: 32,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E0E0E4',
+    backgroundColor: '#E2E2E6',
     marginBottom: spacing.md,
   },
   sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   sheetTitle: {
     ...typography.section,
     color: colors.textDark,
   },
   seeAll: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },

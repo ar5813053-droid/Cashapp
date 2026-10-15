@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
-import { DemoBanner } from '../../src/components/DemoBanner';
+import { PressableScale } from '../../src/components/PressableScale';
 
 function Row({
   label,
@@ -37,30 +37,28 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <PressableScale onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>Settings</Text>
         <View style={{ width: 24 }} />
-      </View>
-      <View style={styles.demo}>
-        <DemoBanner />
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.section}>Appearance</Text>
         <View style={styles.group}>
-          <Row label="Dark theme (demo)" value={dark} onValueChange={setDark} />
+          <Row label="Dark theme" value={dark} onValueChange={setDark} />
         </View>
         <Text style={styles.section}>Motion</Text>
         <View style={styles.group}>
           <Row label="Animations" value={motion} onValueChange={setMotion} />
           <Row label="Haptics (UI only)" value={haptics} onValueChange={setHaptics} />
         </View>
-        <Text style={styles.section}>About</Text>
+        <Text style={styles.section}>About this app</Text>
         <View style={styles.group}>
           <Text style={styles.about}>
-            Pulse Pay is a UI demo. No real banking, payments, or transfers are
-            performed. All balances and recipients are sample data.
+            Pulse Pay is a simulation for design and interaction demos. Balances,
+            cards, recipients, and transfers are sample data. No real money moves
+            and no bank accounts are connected.
           </Text>
         </View>
       </ScrollView>
@@ -78,7 +76,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   title: { ...typography.title, color: colors.textPrimary, fontSize: 22 },
-  demo: { marginTop: spacing.md, alignItems: 'center' },
   content: {
     padding: layout.screenPadding,
     paddingBottom: layout.bottomNavHeight + 24,

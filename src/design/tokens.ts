@@ -1,27 +1,27 @@
 /**
- * Pulse Pay — design tokens from reference video frames.
- * Original demo fintech UI. Not affiliated with any bank.
+ * Pulse Pay design system — refined for compact premium fintech UI.
  */
 
 export const colors = {
-  bg: '#0B0B0D',
-  bgElevated: '#141416',
-  bgCard: '#1A1A1E',
+  bg: '#0A0A0C',
+  bgElevated: '#121214',
+  bgCard: '#1C1C1F',
   bgSheet: '#FFFFFF',
-  bgSheetMuted: '#F5F5F7',
+  bgSheetMuted: '#F4F4F6',
 
   textPrimary: '#FFFFFF',
-  textSecondary: 'rgba(255,255,255,0.55)',
-  textMuted: 'rgba(255,255,255,0.35)',
-  textDark: '#111111',
-  textDarkSecondary: '#6B6B70',
-  textDarkMuted: '#9A9AA0',
+  textSecondary: 'rgba(255,255,255,0.58)',
+  textMuted: 'rgba(255,255,255,0.38)',
+  textDark: '#0F0F12',
+  textDarkSecondary: '#5C5C66',
+  textDarkMuted: '#8E8E98',
 
   accentGreen: '#22C55E',
   success: '#00E676',
   successBg: '#00C853',
   danger: '#EF4444',
   income: '#16A34A',
+  outgoing: '#0F0F12',
 
   cardYellow: '#F5E74A',
   cardMint: '#3DDFB0',
@@ -30,10 +30,11 @@ export const colors = {
 
   border: 'rgba(255,255,255,0.08)',
   borderDark: 'rgba(0,0,0,0.06)',
-  pill: 'rgba(255,255,255,0.1)',
-  pillDark: '#F0F0F2',
-  overlay: 'rgba(0,0,0,0.45)',
-  demoBanner: '#F59E0B',
+  pill: 'rgba(255,255,255,0.12)',
+  pillDark: '#ECECF0',
+  overlay: 'rgba(0,0,0,0.5)',
+  accent: '#3B82F6',
+  warning: '#F59E0B',
 } as const;
 
 export const spacing = {
@@ -51,20 +52,20 @@ export const radii = {
   sm: 10,
   md: 14,
   lg: 18,
-  xl: 24,
+  xl: 22,
   xxl: 28,
   full: 999,
-  card: 22,
-  sheet: 28,
+  card: 20,
+  sheet: 24,
   button: 999,
-  key: 16,
+  key: 14,
 } as const;
 
 export const typography = {
-  balance: { fontSize: 48, fontWeight: '700' as const, letterSpacing: -1.2 },
-  amountLarge: { fontSize: 56, fontWeight: '600' as const, letterSpacing: -1.5 },
-  title: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.5 },
-  section: { fontSize: 17, fontWeight: '600' as const },
+  balance: { fontSize: 44, fontWeight: '700' as const, letterSpacing: -1.4 },
+  amountLarge: { fontSize: 52, fontWeight: '600' as const, letterSpacing: -1.4 },
+  title: { fontSize: 26, fontWeight: '700' as const, letterSpacing: -0.4 },
+  section: { fontSize: 16, fontWeight: '600' as const },
   body: { fontSize: 15, fontWeight: '500' as const },
   caption: { fontSize: 13, fontWeight: '500' as const },
   micro: { fontSize: 11, fontWeight: '500' as const },
@@ -74,39 +75,43 @@ export const typography = {
 export const shadows = {
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 6,
   },
   sheet: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 12,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 10,
   },
   soft: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
 } as const;
 
 export const animation = {
-  fast: 180,
-  normal: 280,
-  slow: 420,
-  success: 500,
+  fast: 160,
+  normal: 260,
+  slow: 400,
+  success: 480,
 } as const;
 
 export const layout = {
   screenPadding: 20,
-  bottomNavHeight: 72,
+  /** Compact floating tab bar */
+  bottomNavHeight: 56,
+  bottomNavMargin: 12,
   cardWidth: 280,
   cardHeight: 168,
-  avatarSize: 64,
-  keySize: 72,
+  avatarSize: 56,
+  keySize: 64,
+  buttonHeight: 48,
+  iconBox: 40,
 } as const;

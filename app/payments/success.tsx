@@ -36,14 +36,14 @@ export default function SuccessScreen() {
   };
 
   return (
-    <Pressable style={styles.screen} onPress={close} accessibilityLabel="Close success screen">
+    <Pressable style={styles.screen} onPress={close} accessibilityLabel="Close">
       <Animated.View style={[styles.content, checkStyle]}>
         <View style={styles.checkCircle}>
-          <Ionicons name="checkmark" size={48} color="#fff" />
+          <Ionicons name="checkmark" size={44} color="#fff" />
         </View>
         <Text style={styles.amount}>{formatMoney(draft.amount || 0)}</Text>
         <Text style={styles.sent}>Sent to {recipient.name}</Text>
-        <Text style={styles.demo}>DEMO · NOT A REAL PAYMENT</Text>
+        <Text style={styles.sub}>Simulated · no real payment</Text>
       </Animated.View>
       <Text style={styles.hint}>Tap anywhere to close</Text>
     </Pressable>
@@ -59,10 +59,10 @@ const styles = StyleSheet.create({
   },
   content: { alignItems: 'center', gap: spacing.md },
   checkCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2.5,
     borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -71,18 +71,16 @@ const styles = StyleSheet.create({
   amount: {
     ...typography.amountLarge,
     color: '#fff',
-    fontSize: 48,
+    fontSize: 44,
   },
   sent: {
     ...typography.section,
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.92)',
   },
-  demo: {
+  sub: {
     ...typography.micro,
-    color: 'rgba(255,255,255,0.75)',
-    fontWeight: '700',
-    marginTop: spacing.sm,
-    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 4,
   },
   hint: {
     position: 'absolute',

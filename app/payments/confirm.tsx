@@ -1,27 +1,37 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
+import { colors, spacing, typography, layout } from '../../src/design/tokens';
 import { DEMO_BALANCE, RECIPIENTS, CARDS, formatMoney } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
 import { SwipeToConfirm } from '../../src/components/SwipeToConfirm';
-import { DemoBanner } from '../../src/components/DemoBanner';
+import { PressableScale } from '../../src/components/PressableScale';
 
 export default function ConfirmScreen() {
   const router = useRouter();
   const { draft } = usePayment();
+  const [processing, setProcessing] = useState(false);
   const recipient = RECIPIENTS.find((r) => r.id === draft.recipientId) ?? RECIPIENTS[1];
   const card = CARDS.find((c) => c.id === draft.cardId) ?? CARDS[0];
   const amount = draft.amount;
 
+  const onConfirm = () => {
+    if (processing) return;
+    setProcessing(true);
+    // Simulated processing delay — no real transfer
+    setTimeout(() => {
+      router.replace('/payments/success');
+    }, 700);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <PressableScale onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={28} color={colors.textDarkMuted} />
-        </Pressable>
+        </PressableScale>
       </View>
 
       <View style={styles.tabs}>
@@ -30,12 +40,10 @@ export default function ConfirmScreen() {
       </View>
 
       <Text style={styles.recipient}>
-        {recipient.name} · {card.last4} USD ▾
+        {recipient.name} · {card.last4} USD
       </Text>
 
-      <View style={styles.demo}>
-        <DemoBanner />
-      </View>
+      <Text style={styles.simNote}>Simulated transfer — no real funds move</Text>
 
       <View style={styles.amountWrap}>
         <Text style={styles.amount}>{formatMoney(amount)}</Text>
@@ -46,7 +54,14 @@ export default function ConfirmScreen() {
       </View>
 
       <View style={styles.confirmArea}>
-        <SwipeToConfirm onConfirm={() => router.replace('/payments/success')} />
+        {processing ? (
+          <View style={styles.processing}>
+            <ActivityIndicator color={colors.textDark} />
+            <Text style={styles.processingText}>Processing simulation…</Text>
+          </View>
+        ) : (
+          <SwipeToConfirm onConfirm={onConfirm} />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -69,7 +84,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.md,
   },
-  demo: { marginTop: spacing.md, alignItems: 'center' },
+  simNote: {
+    ...typography.micro,
+    color: colors.textDarkMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
   amountWrap: {
     alignItems: 'center',
     marginTop: spacing.huge,
@@ -90,4 +110,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: spacing.huge,
   },
+  processing: { alignItems: 'center', gap: spacing.md },
+  processingText: { ...typography.caption, color: colors.textDarkSecondary },
 });

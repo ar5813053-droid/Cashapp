@@ -1,23 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import type { Transaction } from '../types';
-import { colors, spacing, radii, typography } from '../design/tokens';
+import { colors, spacing, typography } from '../design/tokens';
 import { formatMoney } from '../mock-data';
+import { MerchantLogo } from './MerchantLogo';
 
 export function TransactionRow({ item }: { item: Transaction }) {
   const isIncome = item.amount > 0;
   return (
     <View style={styles.row}>
-      <View style={[styles.icon, { backgroundColor: item.iconColor === '#000000' ? '#111' : item.iconColor }]}>
-        {item.icon === 'apple' && <Ionicons name="logo-apple" size={18} color="#fff" />}
-        {item.icon === 'threads' && <Ionicons name="at" size={18} color="#fff" />}
-        {item.icon === 'generic' && <Ionicons name="ellipse" size={10} color="#fff" />}
-        {item.icon === 'transfer' && <Ionicons name="swap-horizontal" size={18} color="#fff" />}
+      <MerchantLogo merchant={item.merchant} />
+      <View style={styles.mid}>
+        <Text style={styles.name} numberOfLines={1}>
+          {item.merchant}
+        </Text>
+        {!!item.date && <Text style={styles.date}>{item.date}</Text>}
       </View>
-      <Text style={styles.name}>{item.merchant}</Text>
-      <Text style={[styles.amount, isIncome && styles.income]}>
-        {isIncome ? formatMoney(item.amount, true) : formatMoney(item.amount, true)}
+      <Text style={[styles.amount, isIncome ? styles.income : styles.outgoing]}>
+        {formatMoney(item.amount, true)}
       </Text>
     </View>
   );
@@ -30,24 +30,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.md,
   },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  mid: { flex: 1 },
   name: {
-    flex: 1,
     ...typography.body,
     color: colors.textDark,
+  },
+  date: {
+    ...typography.micro,
+    color: colors.textDarkMuted,
+    marginTop: 2,
   },
   amount: {
     ...typography.body,
-    color: colors.textDark,
     fontWeight: '600',
   },
-  income: {
-    color: colors.income,
-  },
+  income: { color: colors.income },
+  outgoing: { color: colors.textDark },
 });

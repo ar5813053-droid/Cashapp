@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { CARDS } from '../../src/mock-data';
 import { CardCarousel } from '../../src/components/CardCarousel';
-import { DemoBanner } from '../../src/components/DemoBanner';
 import type { VirtualCard } from '../../src/types';
 
 export default function CardsScreen() {
@@ -29,7 +28,6 @@ export default function CardsScreen() {
         </Pressable>
       </View>
       <View style={styles.demo}>
-        <DemoBanner compact />
       </View>
 
       <ScrollView
@@ -89,7 +87,7 @@ const styles = StyleSheet.create({
   },
   demo: { marginTop: spacing.md, alignItems: 'center' },
   content: {
-    paddingBottom: layout.bottomNavHeight + 40,
+    paddingBottom: layout.bottomNavHeight + 36,
   },
   detail: {
     marginHorizontal: layout.screenPadding,

@@ -8,7 +8,6 @@ import { colors, spacing, radii, typography, layout } from '../../src/design/tok
 import { DEMO_BALANCE, RECIPIENTS, CARDS, formatMoney } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
 import { Keypad } from '../../src/components/Keypad';
-import { DemoBanner } from '../../src/components/DemoBanner';
 
 function evalExpression(expr: string): number {
   // Safe demo evaluator: digits, one operator, optional second operand
@@ -109,8 +108,6 @@ export default function AmountScreen() {
         {recipient.name} · {card.last4} USD ▾
       </Text>
 
-      <View style={styles.demo}>
-        <DemoBanner compact />
       </View>
 
       <Animated.View entering={FadeIn.duration(200)} style={styles.amountWrap}>

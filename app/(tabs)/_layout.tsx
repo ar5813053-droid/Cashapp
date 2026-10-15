@@ -3,57 +3,80 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, layout } from '../../src/design/tokens';
 import { Platform, View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+function TabIcon({
+  name,
+  focused,
+  color,
+}: {
+  name: keyof typeof Ionicons.glyphMap;
+  focused: boolean;
+  color: string;
+}) {
+  return (
+    <View style={[styles.iconWrap, focused && styles.iconActive]}>
+      <Ionicons name={name} size={20} color={focused ? colors.textDark : color} />
+    </View>
+  );
+}
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottom = Math.max(insets.bottom, 8);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            bottom: bottom,
+            height: layout.bottomNavHeight,
+          },
+        ],
         tabBarActiveTintColor: colors.textDark,
         tabBarInactiveTintColor: colors.textDarkMuted,
-        tabBarItemStyle: { paddingVertical: 8 },
+        tabBarItemStyle: styles.item,
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen
         name="recipients"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconActive]}>
-              <Ionicons name="people" size={22} color={focused ? colors.textDark : color} />
-            </View>
+            <TabIcon name="people" focused={focused} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Recipients',
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconActive]}>
-              <Ionicons name="home" size={22} color={focused ? colors.textDark : color} />
-            </View>
+            <TabIcon name="home" focused={focused} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Home',
         }}
       />
       <Tabs.Screen
         name="cards"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconActive]}>
-              <Ionicons name="card" size={22} color={focused ? colors.textDark : color} />
-            </View>
+            <TabIcon name="card" focused={focused} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Cards',
         }}
       />
       <Tabs.Screen
         name="market"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrap, focused && styles.iconActive]}>
-              <Ionicons name="trending-up" size={22} color={focused ? colors.textDark : color} />
-            </View>
+            <TabIcon name="trending-up" focused={focused} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Market',
         }}
       />
       <Tabs.Screen name="activity" options={{ href: null }} />
@@ -65,28 +88,29 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    left: 24,
-    right: 24,
-    bottom: Platform.OS === 'ios' ? 28 : 16,
-    height: layout.bottomNavHeight - 8,
-    borderRadius: 36,
+    left: 20,
+    right: 20,
+    borderRadius: 28,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 0,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+    elevation: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
+  },
+  item: {
+    paddingVertical: 4,
   },
   iconWrap: {
     width: 44,
-    height: 40,
-    borderRadius: 20,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconActive: {
-    backgroundColor: '#F0F0F2',
+    backgroundColor: '#F0F0F3',
   },
 });

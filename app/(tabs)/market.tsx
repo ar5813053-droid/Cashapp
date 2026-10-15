@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Pressable,
   FlatList,
   ActivityIndicator,
   RefreshControl,
@@ -11,8 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
-import { DemoBanner } from '../../src/components/DemoBanner';
 import { fetchMarketFeed, type MarketItem } from '../../src/mock-data/market';
+import { PressableScale } from '../../src/components/PressableScale';
 
 type Status = 'idle' | 'loading' | 'ok' | 'error';
 
@@ -23,8 +22,11 @@ export default function MarketScreen() {
   const [items, setItems] = useState<MarketItem[]>([]);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [offlineLabel, setOfflineLabel] = useState(false);
+  const inflight = useRef(false);
 
   const load = useCallback(async () => {
+    if (inflight.current) return;
+    inflight.current = true;
     setStatus('loading');
     setOfflineLabel(false);
     try {
@@ -43,6 +45,8 @@ export default function MarketScreen() {
         setItems([]);
         setStatus('error');
       }
+    } finally {
+      inflight.current = false;
     }
   }, []);
 
@@ -54,31 +58,28 @@ export default function MarketScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Market</Text>
-        <Pressable onPress={load} accessibilityLabel="Retry market feed" hitSlop={12}>
-          <Ionicons name="refresh" size={22} color={colors.textPrimary} />
-        </Pressable>
-      </View>
-      <View style={styles.demo}>
-        <DemoBanner compact />
+        <PressableScale onPress={load} accessibilityLabel="Retry market feed" hitSlop={12}>
+          <Ionicons name="refresh" size={20} color={colors.textPrimary} />
+        </PressableScale>
       </View>
       <Text style={styles.disclaimer}>
-        Public crypto quotes for demo only — not investment advice.
+        Public crypto quotes for illustration only — not investment advice.
       </Text>
 
       {status === 'loading' && items.length === 0 && (
         <View style={styles.center}>
           <ActivityIndicator color={colors.textPrimary} />
-          <Text style={styles.muted}>Loading market feed…</Text>
+          <Text style={styles.muted}>Loading market data…</Text>
         </View>
       )}
 
       {status === 'error' && (
         <View style={styles.center}>
-          <Text style={styles.errorTitle}>Unable to load market feed</Text>
+          <Text style={styles.errorTitle}>Unable to load market data</Text>
           <Text style={styles.muted}>Check your connection and try again.</Text>
-          <Pressable style={styles.retryBtn} onPress={load} accessibilityLabel="Retry">
-            <Text style={styles.retryText}>🔁 Retry</Text>
-          </Pressable>
+          <PressableScale style={styles.retryBtn} onPress={load} accessibilityLabel="Retry">
+            <Text style={styles.retryText}>Retry</Text>
+          </PressableScale>
         </View>
       )}
 
@@ -86,8 +87,7 @@ export default function MarketScreen() {
         <>
           {offlineLabel && (
             <Text style={styles.offlineTag}>
-              Offline / Last updated{' '}
-              {updatedAt ? new Date(updatedAt).toLocaleString() : '—'}
+              Offline · Last updated {updatedAt ? new Date(updatedAt).toLocaleString() : '—'}
             </Text>
           )}
           <FlatList
@@ -110,12 +110,7 @@ export default function MarketScreen() {
                       maximumFractionDigits: item.price > 100 ? 0 : 2,
                     })}
                   </Text>
-                  <Text
-                    style={[
-                      styles.change,
-                      item.changePct >= 0 ? styles.up : styles.down,
-                    ]}
-                  >
+                  <Text style={[styles.change, item.changePct >= 0 ? styles.up : styles.down]}>
                     {item.changePct >= 0 ? '+' : ''}
                     {item.changePct.toFixed(2)}%
                   </Text>
@@ -139,7 +134,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   title: { ...typography.title, color: colors.textPrimary },
-  demo: { marginTop: spacing.sm, alignItems: 'center' },
   disclaimer: {
     ...typography.micro,
     color: colors.textMuted,
@@ -160,19 +154,20 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     backgroundColor: colors.pill,
     paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.md,
+    height: 44,
     borderRadius: radii.full,
+    justifyContent: 'center',
   },
   retryText: { ...typography.label, color: colors.textPrimary },
   offlineTag: {
     ...typography.micro,
-    color: colors.demoBanner,
+    color: colors.warning,
     textAlign: 'center',
     marginTop: spacing.md,
   },
   list: {
     padding: layout.screenPadding,
-    paddingBottom: layout.bottomNavHeight + 40,
+    paddingBottom: layout.bottomNavHeight + 36,
   },
   row: {
     flexDirection: 'row',

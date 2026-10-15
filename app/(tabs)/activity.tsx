@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: layout.screenPadding,
-    paddingBottom: layout.bottomNavHeight + 24,
+    paddingBottom: layout.bottomNavHeight + 36,
   },
   rowWrap: {
     backgroundColor: colors.bgSheet,
