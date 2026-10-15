@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,9 +8,9 @@ import { colors, spacing, radii, typography, layout } from '../../src/design/tok
 import { DEMO_BALANCE, RECIPIENTS, CARDS, formatMoney } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
 import { Keypad } from '../../src/components/Keypad';
+import { PressableScale } from '../../src/components/PressableScale';
 
 function evalExpression(expr: string): number {
-  // Safe demo evaluator: digits, one operator, optional second operand
   const cleaned = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/\s/g, '');
   if (!cleaned) return 0;
   const m = cleaned.match(/^(\d+\.?\d*)([+\-*/])(\d+\.?\d*)$/);
@@ -58,7 +58,6 @@ export default function AmountScreen() {
 
   const onOperator = (op: '+' | '-' | '×' | '÷') => {
     if (!expr) return;
-    // Replace trailing operator or append
     if (/[+\-×÷]$/.test(expr)) update(expr.slice(0, -1) + op);
     else update(expr + op);
   };
@@ -90,25 +89,24 @@ export default function AmountScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <PressableScale onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={28} color={colors.textDarkMuted} />
-        </Pressable>
+        </PressableScale>
       </View>
 
       <View style={styles.tabs}>
-        <Pressable onPress={() => setMode('Send')}>
+        <PressableScale onPress={() => setMode('Send')}>
           <Text style={[styles.tab, mode === 'Send' && styles.tabOn]}>Send</Text>
-        </Pressable>
-        <Pressable onPress={() => setMode('Request')}>
+        </PressableScale>
+        <PressableScale onPress={() => setMode('Request')}>
           <Text style={[styles.tab, mode === 'Request' && styles.tabOn]}>Request</Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <Text style={styles.recipient}>
-        {recipient.name} · {card.last4} USD ▾
+        {recipient.name} · {card.last4} USD
       </Text>
-
-      </View>
+      <Text style={styles.simNote}>Simulated amount · no real transfer</Text>
 
       <Animated.View entering={FadeIn.duration(200)} style={styles.amountWrap}>
         <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
@@ -127,55 +125,48 @@ export default function AmountScreen() {
         />
       </View>
 
-      <Pressable
+      <PressableScale
         style={[styles.continue, value <= 0 && styles.continueDisabled]}
         onPress={continuePay}
         disabled={value <= 0}
         accessibilityLabel="Continue to review"
       >
         <Text style={styles.continueText}>Continue</Text>
-      </Pressable>
+      </PressableScale>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgSheet },
-  topBar: {
-    alignItems: 'center',
-    paddingTop: spacing.sm,
-  },
+  topBar: { alignItems: 'center', paddingTop: spacing.sm },
   tabs: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.xxl,
     marginTop: spacing.md,
   },
-  tab: {
-    ...typography.section,
-    color: colors.textDarkMuted,
-  },
-  tabOn: {
-    color: colors.textDark,
-    fontWeight: '700',
-  },
+  tab: { ...typography.section, color: colors.textDarkMuted },
+  tabOn: { color: colors.textDark, fontWeight: '700' },
   recipient: {
     ...typography.caption,
     color: colors.textDarkSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
   },
-  demo: { marginTop: spacing.sm, alignItems: 'center' },
+  simNote: {
+    ...typography.micro,
+    color: colors.textDarkMuted,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   amountWrap: {
     alignItems: 'center',
     marginTop: spacing.xxxl,
     paddingHorizontal: spacing.xl,
-    minHeight: 120,
+    minHeight: 110,
   },
-  amount: {
-    ...typography.amountLarge,
-    color: colors.textDark,
-  },
+  amount: { ...typography.amountLarge, color: colors.textDark },
   preview: {
     ...typography.body,
     color: colors.textDarkMuted,
@@ -196,12 +187,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     backgroundColor: colors.textDark,
     borderRadius: radii.full,
-    paddingVertical: spacing.lg,
+    height: layout.buttonHeight + 4,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   continueDisabled: { opacity: 0.35 },
-  continueText: {
-    ...typography.section,
-    color: '#fff',
-  },
+  continueText: { ...typography.section, color: '#fff' },
 });
