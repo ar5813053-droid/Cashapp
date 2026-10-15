@@ -9,18 +9,22 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../design/tokens';
 
 type Props = {
   onConfirm: () => void;
   label?: string;
+  disabled?: boolean;
 };
 
 const TRACK_WIDTH = 280;
 const THUMB = 52;
 
-export function SwipeToConfirm({ onConfirm, label = 'Swipe right to confirm' }: Props) {
+export function SwipeToConfirm({
+  onConfirm,
+  label = 'Swipe right to confirm',
+  disabled = false,
+}: Props) {
   const x = useSharedValue(0);
   const confirmed = useSharedValue(false);
 
@@ -29,6 +33,7 @@ export function SwipeToConfirm({ onConfirm, label = 'Swipe right to confirm' }: 
   };
 
   const pan = Gesture.Pan()
+    .enabled(!disabled)
     .onUpdate((e) => {
       if (confirmed.value) return;
       x.value = Math.max(0, Math.min(e.translationX, TRACK_WIDTH - THUMB - 8));
@@ -49,35 +54,33 @@ export function SwipeToConfirm({ onConfirm, label = 'Swipe right to confirm' }: 
   }));
 
   const fillStyle = useAnimatedStyle(() => ({
-    width: x.value + THUMB / 2,
-    opacity: interpolate(x.value, [0, TRACK_WIDTH * 0.5], [0.2, 0.6], Extrapolation.CLAMP),
+    width: x.value + THUMB,
+    opacity: interpolate(x.value, [0, TRACK_WIDTH * 0.5], [0.15, 0.35], Extrapolation.CLAMP),
   }));
 
   return (
-    <View style={styles.wrap} accessibilityRole="button" accessibilityLabel={label}>
+    <View style={[styles.wrap, disabled && styles.disabled]}>
       <View style={styles.track}>
         <Animated.View style={[styles.fill, fillStyle]} />
         <Text style={styles.label}>{label}</Text>
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.thumb, thumbStyle]}>
-            <Ionicons name="chevron-forward" size={22} color={colors.textDark} />
+            <View style={styles.thumbInner} />
           </Animated.View>
         </GestureDetector>
       </View>
-      <Text style={styles.alt} onPress={onConfirm} accessibilityRole="button">
-        Or tap here to confirm
-      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: spacing.md },
+  wrap: { alignItems: 'center', paddingVertical: spacing.md },
+  disabled: { opacity: 0.4 },
   track: {
     width: TRACK_WIDTH,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.bgSheetMuted,
+    height: THUMB + 8,
+    borderRadius: (THUMB + 8) / 2,
+    backgroundColor: '#F0F0F3',
     justifyContent: 'center',
     overflow: 'hidden',
   },
@@ -86,14 +89,13 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: colors.success,
-    borderRadius: 28,
+    backgroundColor: colors.accentGreen,
+    borderRadius: (THUMB + 8) / 2,
   },
   label: {
     ...typography.caption,
     color: colors.textDarkMuted,
     textAlign: 'center',
-    zIndex: 1,
   },
   thumb: {
     position: 'absolute',
@@ -101,18 +103,14 @@ const styles = StyleSheet.create({
     width: THUMB,
     height: THUMB,
     borderRadius: THUMB / 2,
-    backgroundColor: '#fff',
+    backgroundColor: '#D8D8DE',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
-  alt: {
-    ...typography.caption,
-    color: colors.textDarkMuted,
-    textDecorationLine: 'underline',
+  thumbInner: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#B8B8C0',
   },
 });

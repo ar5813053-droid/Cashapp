@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { RECIPIENTS, LINKED_ACCOUNTS } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
@@ -55,7 +56,8 @@ export default function RecipientsScreen() {
       </View>
 
       <View style={styles.grid}>
-        {RECIPIENTS.map((r) => (
+        {RECIPIENTS.map((r, i) => (
+          <Animated.View key={r.id+"wrap"} entering={FadeInDown.delay(i*40).springify().damping(16)}>
           <PressableScale
             key={r.id}
             style={styles.contact}
@@ -72,6 +74,7 @@ export default function RecipientsScreen() {
               {r.handle}
             </Text>
           </PressableScale>
+          </Animated.View>
         ))}
       </View>
 

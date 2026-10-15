@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { CARDS } from '../../src/mock-data';
-import { CardCarousel } from '../../src/components/CardCarousel';
+import { VirtualCardView } from '../../src/components/VirtualCard';
+import { PressableScale } from '../../src/components/PressableScale';
 import type { VirtualCard } from '../../src/types';
+
+const CARD_W = Dimensions.get('window').width - layout.screenPadding * 2;
 
 export default function CardsScreen() {
   const [cards, setCards] = useState<VirtualCard[]>(CARDS);
-  const [activeIndex, setActiveIndex] = useState(0);
 
   const toggleFreeze = (id: string) => {
     setCards((prev) =>
@@ -17,46 +19,33 @@ export default function CardsScreen() {
     );
   };
 
-  const active = cards[activeIndex] ?? cards[0];
-
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Cards</Text>
-        <Pressable style={styles.orderBtn} accessibilityLabel="Order a card">
+        <PressableScale style={styles.orderBtn}>
           <Text style={styles.orderText}>Order a card</Text>
-        </Pressable>
-      </View>
-      <View style={styles.demo}>
+        </PressableScale>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        scrollEnabled
       >
-        <CardCarousel
-          cards={cards}
-          onIndexChange={setActiveIndex}
-          onToggleFreeze={toggleFreeze}
-        />
-
-        {active && (
-          <View style={styles.detail}>
-            <Text style={styles.detailLabel}>Selected card</Text>
-            <Text style={styles.detailValue}>
-              {active.label} ··· {active.last4}
-            </Text>
-            <Text style={styles.detailStatus}>
-              {active.frozen ? 'Frozen (demo)' : 'Active (demo)'}
-            </Text>
-          </View>
-        )}
-
-        <Pressable style={styles.addCard} accessibilityLabel="Add digital card">
-          <Ionicons name="add" size={28} color={colors.textSecondary} />
-          <Text style={styles.addText}>Add digital card</Text>
-        </Pressable>
+        {cards.map((card, i) => (
+          <Animated.View
+            key={card.id}
+            entering={FadeInDown.delay(i * 70).springify().damping(16)}
+          >
+            <VirtualCardView
+              card={card}
+              width={CARD_W}
+              height={172}
+              showActions
+              onToggleFreeze={() => toggleFreeze(card.id)}
+            />
+          </Animated.View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -70,60 +59,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: layout.screenPadding,
     marginTop: spacing.md,
+    marginBottom: spacing.md,
   },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
+  title: { ...typography.title, color: colors.textPrimary },
   orderBtn: {
     backgroundColor: colors.pill,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    height: 36,
     borderRadius: radii.full,
-  },
-  orderText: {
-    ...typography.label,
-    color: colors.textPrimary,
-  },
-  demo: { marginTop: spacing.md, alignItems: 'center' },
-  content: {
-    paddingBottom: layout.bottomNavHeight + 36,
-  },
-  detail: {
-    marginHorizontal: layout.screenPadding,
-    marginTop: spacing.xl,
-    backgroundColor: colors.bgCard,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-  },
-  detailLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  detailValue: {
-    ...typography.section,
-    color: colors.textPrimary,
-    marginTop: 4,
-  },
-  detailStatus: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 6,
-  },
-  addCard: {
-    marginHorizontal: layout.screenPadding,
-    marginTop: spacing.lg,
-    height: 88,
-    borderRadius: radii.card,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
   },
-  addText: {
-    ...typography.caption,
-    color: colors.textSecondary,
+  orderText: { ...typography.label, color: colors.textPrimary },
+  list: {
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: layout.bottomNavHeight + 40,
+    paddingTop: spacing.sm,
   },
 });

@@ -1,5 +1,12 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +15,7 @@ import { colors, spacing, radii, typography, layout } from '../../src/design/tok
 import { DEMO_BALANCE, RECIPIENTS, CARDS, formatMoney } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
 import { Keypad } from '../../src/components/Keypad';
+import { SwipeToConfirm } from '../../src/components/SwipeToConfirm';
 import { PressableScale } from '../../src/components/PressableScale';
 
 function evalExpression(expr: string): number {
@@ -37,6 +45,7 @@ export default function AmountScreen() {
   const { draft, setAmount, setExpression } = usePayment();
   const [expr, setExpr] = useState(draft.expression || '');
   const [mode, setMode] = useState<'Send' | 'Request'>('Send');
+  const [processing, setProcessing] = useState(false);
 
   const recipient = RECIPIENTS.find((r) => r.id === draft.recipientId) ?? RECIPIENTS[1];
   const card = CARDS.find((c) => c.id === draft.cardId) ?? CARDS[0];
@@ -55,13 +64,11 @@ export default function AmountScreen() {
     if (expr === '0') update(d);
     else update(expr + d);
   };
-
   const onOperator = (op: '+' | '-' | '×' | '÷') => {
     if (!expr) return;
     if (/[+\-×÷]$/.test(expr)) update(expr.slice(0, -1) + op);
     else update(expr + op);
   };
-
   const onBackspace = () => update(expr.slice(0, -1));
   const onDecimal = () => {
     const parts = expr.split(/[+\-×÷]/);
@@ -70,82 +77,119 @@ export default function AmountScreen() {
     update(expr + (expr === '' || /[+\-×÷]$/.test(expr) ? '0.' : '.'));
   };
 
-  const continuePay = () => {
-    if (value <= 0) return;
+  const onConfirm = () => {
+    if (processing || value <= 0) return;
     setAmount(value);
-    router.push('/payments/confirm');
+    setProcessing(true);
+    setTimeout(() => {
+      router.replace('/payments/success');
+    }, 650);
   };
 
   const display =
-    expr.includes('×') || expr.includes('+') || expr.includes('-') || expr.includes('÷')
+    /[+\-×÷]/.test(expr) && !/^\d+\.?\d*$/.test(expr)
       ? expr
       : value > 0
         ? `$${value % 1 === 0 ? value.toFixed(0) : value.toFixed(2)}`
-        : '$0.00';
-
-  const preview =
-    /[+\-×÷]\d/.test(expr) && value > 0 ? `= ${value % 1 === 0 ? value : value.toFixed(2)}` : null;
+        : '$0';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.topBar}>
-        <PressableScale onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-down" size={28} color={colors.textDarkMuted} />
-        </PressableScale>
-      </View>
+    <View style={styles.root}>
+      <View style={styles.dim} />
+      <SafeAreaView style={styles.sheet} edges={['top', 'bottom']}>
+        <View style={styles.handle} />
+        <View style={styles.tabs}>
+          <PressableScale
+            onPress={() => setMode('Send')}
+            style={[styles.tabPill, mode === 'Send' && styles.tabPillOn]}
+          >
+            <Text style={[styles.tab, mode === 'Send' && styles.tabOn]}>Send</Text>
+          </PressableScale>
+          <PressableScale onPress={() => setMode('Request')}>
+            <Text style={[styles.tab, mode === 'Request' && styles.tabOn]}>Request</Text>
+          </PressableScale>
+        </View>
 
-      <View style={styles.tabs}>
-        <PressableScale onPress={() => setMode('Send')}>
-          <Text style={[styles.tab, mode === 'Send' && styles.tabOn]}>Send</Text>
-        </PressableScale>
-        <PressableScale onPress={() => setMode('Request')}>
-          <Text style={[styles.tab, mode === 'Request' && styles.tabOn]}>Request</Text>
-        </PressableScale>
-      </View>
-
-      <Text style={styles.recipient}>
-        {recipient.name} · {card.last4} USD
-      </Text>
-      <Text style={styles.simNote}>Simulated amount · no real transfer</Text>
-
-      <Animated.View entering={FadeIn.duration(200)} style={styles.amountWrap}>
-        <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
-          {display}
+        <Text style={styles.recipient}>
+          {recipient.name} · {card.last4} USD ▾
         </Text>
-        {preview && <Text style={styles.preview}>{preview}</Text>}
-        <Text style={styles.available}>Available {formatMoney(DEMO_BALANCE)}</Text>
-      </Animated.View>
 
-      <View style={styles.keypadArea}>
-        <Keypad
-          onDigit={onDigit}
-          onOperator={onOperator}
-          onBackspace={onBackspace}
-          onDecimal={onDecimal}
-        />
-      </View>
+        <Animated.View entering={FadeIn.duration(220)} style={styles.amountWrap}>
+          <View style={styles.amountRow}>
+            <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
+              {display}
+            </Text>
+            <View style={[styles.avatar, { backgroundColor: recipient.avatarColor }]}>
+              <Text style={styles.initials}>{recipient.initials}</Text>
+            </View>
+          </View>
+          <Text style={styles.available}>Available {formatMoney(DEMO_BALANCE)}</Text>
+        </Animated.View>
 
-      <PressableScale
-        style={[styles.continue, value <= 0 && styles.continueDisabled]}
-        onPress={continuePay}
-        disabled={value <= 0}
-        accessibilityLabel="Continue to review"
-      >
-        <Text style={styles.continueText}>Continue</Text>
-      </PressableScale>
-    </SafeAreaView>
+        <View style={styles.swipeArea}>
+          {processing ? (
+            <View style={styles.processing}>
+              <ActivityIndicator color={colors.textDark} />
+              <Text style={styles.processingText}>Processing simulation…</Text>
+            </View>
+          ) : (
+            <SwipeToConfirm
+              onConfirm={onConfirm}
+              disabled={value <= 0}
+            />
+          )}
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keypadArea}
+        >
+          <Keypad
+            onDigit={onDigit}
+            onOperator={onOperator}
+            onBackspace={onBackspace}
+            onDecimal={onDecimal}
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bgSheet },
-  topBar: { alignItems: 'center', paddingTop: spacing.sm },
+  root: { flex: 1, backgroundColor: 'transparent' },
+  dim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    flex: 1,
+    marginTop: 12,
+    backgroundColor: colors.bgSheet,
+    borderTopLeftRadius: radii.sheet,
+    borderTopRightRadius: radii.sheet,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0E0E5',
+    marginTop: spacing.sm,
+  },
   tabs: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.xxl,
+    alignItems: 'center',
+    gap: spacing.lg,
     marginTop: spacing.md,
   },
+  tabPill: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+  },
+  tabPillOn: { backgroundColor: colors.pillDark },
   tab: { ...typography.section, color: colors.textDarkMuted },
   tabOn: { color: colors.textDark, fontWeight: '700' },
   recipient: {
@@ -154,43 +198,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.md,
   },
-  simNote: {
-    ...typography.micro,
-    color: colors.textDarkMuted,
-    textAlign: 'center',
-    marginTop: 4,
-  },
   amountWrap: {
     alignItems: 'center',
-    marginTop: spacing.xxxl,
+    marginTop: spacing.xxl,
     paddingHorizontal: spacing.xl,
-    minHeight: 110,
   },
-  amount: { ...typography.amountLarge, color: colors.textDark },
-  preview: {
-    ...typography.body,
-    color: colors.textDarkMuted,
-    marginTop: spacing.sm,
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
+  amount: { ...typography.amountLarge, color: colors.textDark, maxWidth: '78%' },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: { color: '#fff', fontWeight: '700', fontSize: 13 },
   available: {
     ...typography.caption,
     color: colors.textDarkMuted,
     marginTop: spacing.sm,
   },
+  swipeArea: {
+    marginTop: spacing.xl,
+    minHeight: 72,
+    justifyContent: 'center',
+  },
+  processing: { alignItems: 'center', gap: spacing.sm },
+  processingText: { ...typography.caption, color: colors.textDarkSecondary },
   keypadArea: {
     flex: 1,
     justifyContent: 'flex-end',
     paddingBottom: spacing.md,
   },
-  continue: {
-    marginHorizontal: layout.screenPadding,
-    marginBottom: spacing.lg,
-    backgroundColor: colors.textDark,
-    borderRadius: radii.full,
-    height: layout.buttonHeight + 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  continueDisabled: { opacity: 0.35 },
-  continueText: { ...typography.section, color: '#fff' },
 });

@@ -16,16 +16,16 @@ export default function RootLayout() {
             headerShown: false,
             contentStyle: { backgroundColor: colors.bg },
             animation: 'fade_from_bottom',
-            animationDuration: 280,
+            animationDuration: 300,
           }}
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="payments/amount"
             options={{
-              presentation: 'modal',
+              presentation: 'transparentModal',
               animation: 'slide_from_bottom',
-              contentStyle: { backgroundColor: colors.bgSheet },
+              contentStyle: { backgroundColor: 'transparent' },
             }}
           />
           <Stack.Screen
