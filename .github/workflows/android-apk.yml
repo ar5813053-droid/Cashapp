@@ -34,7 +34,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
           echo "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools" >> "$GITHUB_PATH"
 
-      - name: Accept licenses & ensure platform
+      - name: Accept licenses and ensure platform
         run: |
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SM=$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
@@ -42,62 +42,37 @@ jobs:
           "$SM" "platforms;android-35" "build-tools;35.0.0" "platform-tools" || \
           "$SM" "platforms;android-34" "build-tools;34.0.0" "platform-tools" || true
 
-      - name: Expo prebuild (generate android/)
+      - name: Expo prebuild
         run: npx expo prebuild --platform android --non-interactive --no-install
 
-      - name: Sign release with debug keystore (installable demo APK)
+      - name: Patch release signing for sideload
         run: |
-          # Ensure release builds are signed so the APK installs on devices.
-          # This is NOT a Play Store production key — demo only.
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path("android/app/build.gradle")
-          t = p.read_text()
-          if "signingConfig signingConfigs.debug" not in t:
-              # Expo/RN template: attach debug signing to release buildType
-              t2 = t.replace(
-                  "buildTypes {",
-                  """buildTypes {
-        // CI: demo release signed with debug keystore so APK is installable offline
-"""
-              )
-              # common pattern in RN 0.76
-              if "release {" in t2 and "signingConfig" not in t2.split("release {")[1].split("}")[0]:
-                  t2 = t2.replace(
-                      "release {",
-                      "release {\n            signingConfig signingConfigs.debug",
-                      1,
-                  )
-              p.write_text(t2)
-              print("patched build.gradle for release signing")
-          else:
-              print("signing already configured")
-          print(p.read_text()[:1500])
-          PY
+          python3 -c '
+from pathlib import Path
+p = Path("android/app/build.gradle")
+t = p.read_text()
+if "signingConfig signingConfigs.debug" not in t and "release {" in t:
+    t = t.replace("release {", "release {\n            signingConfig signingConfigs.debug", 1)
+    p.write_text(t)
+    print("patched release signingConfig")
+else:
+    print("no patch needed or already present")
+'
 
-      - name: Build RELEASE APK (embedded JS bundle — no Metro)
+      - name: Build RELEASE APK with embedded JS
         working-directory: android
         env:
           NODE_ENV: production
         run: |
           chmod +x gradlew
-          # assembleRelease packages createBundleReleaseJsAndAssets into the APK
           ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Verify JS bundle is embedded
+      - name: Verify bundle and package APK
         run: |
           APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           echo "APK=$APK"
           ls -lh "$APK"
-          # Unpack and look for index.android.bundle or similar
-          mkdir -p /tmp/apkcheck
-          unzip -l "$APK" | grep -iE 'bundle|index.android|assets/.*js' || true
-          COUNT=$(unzip -l "$APK" | grep -ciE 'index.android.bundle|android.bundle|\.bundle' || true)
-          echo "bundle_entries=$COUNT"
-          if [ "${COUNT:-0}" -lt 1 ]; then
-            echo "WARNING: could not find classic bundle name; listing assets:"
-            unzip -l "$APK" | grep -i assets | head -40
-          fi
+          unzip -l "$APK" | grep -iE 'bundle|index.android|assets/' | head -40 || true
           cp "$APK" PulsePay-standalone.apk
 
       - name: Upload standalone APK artifact
