@@ -1,61 +1,24 @@
-# Pulse Pay — Phase 1 (UI Demo)
+# Pulse Pay (Demo)
 
-Premium iOS-style **fintech UI demo** built with Expo + React Native.
+Offline-first **UI demo** fintech shell. Not a real bank.
 
-**This is not a real banking or payment app.** All balances, cards, recipients, and transfers are mock data. Every flow is clearly labelled **DEMO**.
+## Standalone Android APK
 
-## Reference
+GitHub Actions builds a **release** APK with the JavaScript bundle embedded.
+It does **not** require Metro, Expo Go, or `localhost:8081`.
 
-Designed from a supplied product walkthrough video:
+Download the latest artifact from Actions: **PulsePay-Standalone-APK**.
 
-1. Home dashboard (balance, card stack, transactions sheet)
-2. Cards (stacked digital cards, freeze toggle)
-3. Recipients (avatar grid + account list)
-4. Amount keypad (operators + numeric pad)
-5. Swipe-to-confirm
-6. Green success screen
+## Offline behavior
 
-## Stack
+- Home, Cards, Recipients, Payments, Activity, Settings: local mock data only.
+- **Market** tab: only feature that uses the network (CoinGecko public API). Offline shows “Unable to load market feed” + Retry.
 
-- Expo SDK 52
-- Expo Router
-- TypeScript
-- React Native Reanimated
-- React Native Gesture Handler
-
-## Run
+## Develop
 
 ```bash
-cd pulse-pay
-npm install --legacy-peer-deps
+npm install
 npx expo start
 ```
 
-Then press `a` for Android emulator, `i` for iOS simulator, or scan the QR code with Expo Go.
-
-```bash
-npm run typecheck
-```
-
-## Screens
-
-| Route | Description |
-|-------|-------------|
-| `/(tabs)` | Home dashboard |
-| `/(tabs)/cards` | Virtual cards |
-| `/(tabs)/recipients` | Pick recipient → payment |
-| `/(tabs)/activity` | Transaction list |
-| `/(tabs)/settings` | Demo preferences |
-| `/payments/amount` | Keypad |
-| `/payments/confirm` | Swipe to confirm |
-| `/payments/success` | Success animation |
-
-## Structure
-
-```
-app/                 Expo Router screens
-src/components/      Reusable UI
-src/design/tokens.ts Design system
-src/mock-data/       Sample balances & lists
-src/context/         Payment draft state
-```
+Package id: `com.demo.pulsepay`

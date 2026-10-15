@@ -47,17 +47,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="activity"
+        name="market"
         options={{
-          href: null, // accessible via home sheet; keep route
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconActive]}>
+              <Ionicons name="trending-up" size={22} color={focused ? colors.textDark : color} />
+            </View>
+          ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          href: null,
-        }}
-      />
+      <Tabs.Screen name="activity" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 0,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   iconWrap: {
-    width: 48,
+    width: 44,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',

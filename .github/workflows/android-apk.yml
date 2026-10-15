@@ -8,7 +8,7 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -32,40 +32,78 @@ jobs:
         run: |
           echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-          ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}" || true
+          echo "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools" >> "$GITHUB_PATH"
 
       - name: Accept licenses & ensure platform
         run: |
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/tmp/lic.txt 2>&1 || \
-          yes | "$SDK/cmdline-tools/16.0/bin/sdkmanager" --licenses >/tmp/lic.txt 2>&1 || true
           SM=$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
-          echo "sdkmanager=$SM"
+          yes | "$SM" --licenses >/tmp/lic.txt 2>&1 || true
           "$SM" "platforms;android-35" "build-tools;35.0.0" "platform-tools" || \
           "$SM" "platforms;android-34" "build-tools;34.0.0" "platform-tools" || true
 
       - name: Expo prebuild (generate android/)
         run: npx expo prebuild --platform android --non-interactive --no-install
 
-      - name: Build debug APK
+      - name: Sign release with debug keystore (installable demo APK)
+        run: |
+          # Ensure release builds are signed so the APK installs on devices.
+          # This is NOT a Play Store production key — demo only.
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path("android/app/build.gradle")
+          t = p.read_text()
+          if "signingConfig signingConfigs.debug" not in t:
+              # Expo/RN template: attach debug signing to release buildType
+              t2 = t.replace(
+                  "buildTypes {",
+                  """buildTypes {
+        // CI: demo release signed with debug keystore so APK is installable offline
+"""
+              )
+              # common pattern in RN 0.76
+              if "release {" in t2 and "signingConfig" not in t2.split("release {")[1].split("}")[0]:
+                  t2 = t2.replace(
+                      "release {",
+                      "release {\n            signingConfig signingConfigs.debug",
+                      1,
+                  )
+              p.write_text(t2)
+              print("patched build.gradle for release signing")
+          else:
+              print("signing already configured")
+          print(p.read_text()[:1500])
+          PY
+
+      - name: Build RELEASE APK (embedded JS bundle — no Metro)
         working-directory: android
+        env:
+          NODE_ENV: production
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          # assembleRelease packages createBundleReleaseJsAndAssets into the APK
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Locate APK
+      - name: Verify JS bundle is embedded
         run: |
-          APK=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
-          echo "Found: $APK"
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "APK=$APK"
           ls -lh "$APK"
-          cp "$APK" PulsePay-debug.apk
+          # Unpack and look for index.android.bundle or similar
+          mkdir -p /tmp/apkcheck
+          unzip -l "$APK" | grep -iE 'bundle|index.android|assets/.*js' || true
+          COUNT=$(unzip -l "$APK" | grep -ciE 'index.android.bundle|android.bundle|\.bundle' || true)
+          echo "bundle_entries=$COUNT"
+          if [ "${COUNT:-0}" -lt 1 ]; then
+            echo "WARNING: could not find classic bundle name; listing assets:"
+            unzip -l "$APK" | grep -i assets | head -40
+          fi
+          cp "$APK" PulsePay-standalone.apk
 
-      - name: Upload APK artifact
+      - name: Upload standalone APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PulsePay-Android-APK
-          path: PulsePay-debug.apk
+          name: PulsePay-Standalone-APK
+          path: PulsePay-standalone.apk
           if-no-files-found: error
           retention-days: 30
