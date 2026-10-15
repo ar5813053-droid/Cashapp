@@ -1,30 +1,24 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { CARDS } from '../../src/mock-data';
-import { VirtualCardView } from '../../src/components/VirtualCard';
+import { CardCarousel } from '../../src/components/CardCarousel';
 import { DemoBanner } from '../../src/components/DemoBanner';
 import type { VirtualCard } from '../../src/types';
 
-const CARD_W = Dimensions.get('window').width - layout.screenPadding * 2;
-
 export default function CardsScreen() {
   const [cards, setCards] = useState<VirtualCard[]>(CARDS);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const toggleFreeze = (id: string) => {
     setCards((prev) =>
       prev.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c))
     );
   };
+
+  const active = cards[activeIndex] ?? cards[0];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -39,26 +33,28 @@ export default function CardsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.list}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        scrollEnabled
       >
-        {cards.map((card) => (
-          <View key={card.id} style={styles.cardWrap}>
-            <VirtualCardView
-              card={card}
-              width={CARD_W}
-              height={160}
-              showActions
-              onToggleFreeze={() => toggleFreeze(card.id)}
-            />
-            {card.frozen && (
-              <View style={styles.frozenBadge}>
-                <Ionicons name="snow" size={12} color="#fff" />
-                <Text style={styles.frozenText}>Frozen</Text>
-              </View>
-            )}
+        <CardCarousel
+          cards={cards}
+          onIndexChange={setActiveIndex}
+          onToggleFreeze={toggleFreeze}
+        />
+
+        {active && (
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Selected card</Text>
+            <Text style={styles.detailValue}>
+              {active.label} ··· {active.last4}
+            </Text>
+            <Text style={styles.detailStatus}>
+              {active.frozen ? 'Frozen (demo)' : 'Active (demo)'}
+            </Text>
           </View>
-        ))}
+        )}
+
         <Pressable style={styles.addCard} accessibilityLabel="Add digital card">
           <Ionicons name="add" size={28} color={colors.textSecondary} />
           <Text style={styles.addText}>Add digital card</Text>
@@ -92,31 +88,34 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   demo: { marginTop: spacing.md, alignItems: 'center' },
-  list: {
-    padding: layout.screenPadding,
+  content: {
     paddingBottom: layout.bottomNavHeight + 40,
-    gap: spacing.lg,
   },
-  cardWrap: { position: 'relative' },
-  frozenBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radii.full,
+  detail: {
+    marginHorizontal: layout.screenPadding,
+    marginTop: spacing.xl,
+    backgroundColor: colors.bgCard,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
   },
-  frozenText: {
-    ...typography.micro,
-    color: '#fff',
-    fontWeight: '700',
+  detailLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  detailValue: {
+    ...typography.section,
+    color: colors.textPrimary,
+    marginTop: 4,
+  },
+  detailStatus: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 6,
   },
   addCard: {
-    height: 100,
+    marginHorizontal: layout.screenPadding,
+    marginTop: spacing.lg,
+    height: 88,
     borderRadius: radii.card,
     borderWidth: 1.5,
     borderColor: colors.border,
