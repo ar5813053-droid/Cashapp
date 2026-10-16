@@ -1,50 +1,65 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
 import { useAppStore } from '../../src/store/AppStore';
 import { VirtualCardView } from '../../src/components/VirtualCard';
 import { PressableScale } from '../../src/components/PressableScale';
-import type { VirtualCard } from '../../src/types';
 
 const CARD_W = Dimensions.get('window').width - layout.screenPadding * 2;
 
 export default function CardsScreen() {
+  const router = useRouter();
   const { state, setCards } = useAppStore();
   const cards = state.cards;
 
   const toggleFreeze = (id: string) => {
-    setCards(
-      cards.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c))
-    );
+    setCards(cards.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c)));
+  };
+
+  const addCard = () => {
+    const id = `card-${Date.now()}`;
+    setCards([
+      ...cards,
+      {
+        id,
+        label: 'Digital card',
+        last4: String(Math.floor(1000 + Math.random() * 9000)),
+        color: '#8B5CF6',
+        textColor: '#fff',
+        holderName: state.profile.displayName,
+        expiry: '12/29',
+        cvv: '123',
+        displayBalance: 0,
+      },
+    ]);
+    router.push({ pathname: '/cards/edit', params: { id } });
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Cards</Text>
-        <PressableScale style={styles.orderBtn}>
-          <Text style={styles.orderText}>Order a card</Text>
+        <PressableScale style={styles.orderBtn} onPress={addCard}>
+          <Text style={styles.orderText}>Add card</Text>
         </PressableScale>
       </View>
+      <Text style={styles.demo}>Virtual cards · demo only</Text>
 
-      <ScrollView
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {cards.map((card, i) => (
-          <Animated.View
-            key={card.id}
-            entering={FadeInDown.delay(i * 70).springify().damping(16)}
-          >
-            <VirtualCardView
-              card={card}
-              width={CARD_W}
-              height={172}
-              showActions
-              onToggleFreeze={() => toggleFreeze(card.id)}
-            />
+          <Animated.View key={card.id} entering={FadeInDown.delay(i * 60).springify().damping(16)}>
+            <PressableScale onPress={() => router.push({ pathname: '/cards/edit', params: { id: card.id } })}>
+              <VirtualCardView
+                card={card}
+                width={CARD_W}
+                height={172}
+                showActions
+                onToggleFreeze={() => toggleFreeze(card.id)}
+              />
+            </PressableScale>
           </Animated.View>
         ))}
       </ScrollView>
@@ -60,7 +75,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: layout.screenPadding,
     marginTop: spacing.md,
-    marginBottom: spacing.md,
   },
   title: { ...typography.title, color: colors.textPrimary },
   orderBtn: {
@@ -69,11 +83,21 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: radii.full,
     justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   orderText: { ...typography.label, color: colors.textPrimary },
+  demo: {
+    ...typography.micro,
+    color: '#FBBF24',
+    textAlign: 'center',
+    marginTop: 6,
+  },
   list: {
     paddingHorizontal: layout.screenPadding,
     paddingBottom: layout.bottomNavHeight + 40,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
   },
 });

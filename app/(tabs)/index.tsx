@@ -226,6 +226,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     height: 38,
     borderRadius: radii.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(96,165,250,0.45)',
+    shadowColor: '#3B82F6',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 5,
   },
   pillText: { ...typography.label, color: colors.textPrimary },
   midRow: {

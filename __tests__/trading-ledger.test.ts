@@ -1,29 +1,37 @@
-/**
- * Lightweight accounting checks for the demo ledger rules.
- * Run conceptually in CI; pure functions mirrored from AppStore.
- */
-function applyBuy(cash: number, qty: number, price: number) {
-  const fee = Math.round(qty * price * 0.001 * 100) / 100;
-  const cost = Math.round((qty * price + fee) * 100) / 100;
-  if (cost > cash) return { ok: false as const, cash };
-  return { ok: true as const, cash: Math.round((cash - cost) * 100) / 100, fee, cost };
+function equity(cash: number, qty: number, mark: number) {
+  return Math.round((cash + qty * mark) * 100) / 100;
 }
-
-function applySell(cash: number, held: number, qty: number, price: number) {
-  if (qty > held) return { ok: false as const, cash, held };
-  const fee = Math.round(qty * price * 0.001 * 100) / 100;
+function buy(cash: number, qty: number, price: number, feeRate = 0) {
+  const fee = Math.round(qty * price * feeRate * 100) / 100;
+  const cost = Math.round((qty * price + fee) * 100) / 100;
+  if (cost > cash) return null;
+  return { cash: Math.round((cash - cost) * 100) / 100, qty, avg: price };
+}
+function sell(cash: number, held: number, avg: number, qty: number, price: number, feeRate = 0) {
+  if (qty > held) return null;
+  const fee = Math.round(qty * price * feeRate * 100) / 100;
   const proceeds = Math.round((qty * price - fee) * 100) / 100;
+  const realized = Math.round((price - avg) * qty * 100) / 100 - fee;
   return {
-    ok: true as const,
     cash: Math.round((cash + proceeds) * 100) / 100,
     held: held - qty,
+    realized,
   };
 }
 
-const buy = applyBuy(1000, 1, 100);
-if (!buy.ok || buy.cash !== 899.9) throw new Error('buy failed ' + JSON.stringify(buy));
-const reject = applyBuy(50, 1, 100);
-if (reject.ok) throw new Error('should reject');
-const sell = applySell(900, 1, 1, 110);
-if (!sell.ok || sell.held !== 0) throw new Error('sell failed');
+// profit scenario
+let cash = 1000;
+const b = buy(cash, 1, 100)!;
+cash = b.cash;
+if (equity(cash, 1, 100) !== 1000) throw new Error('entry equity');
+if (equity(cash, 1, 120) !== 1020) throw new Error('unrealized');
+const s = sell(cash, 1, 100, 1, 120)!;
+if (s.cash !== 1020 || s.realized !== 20) throw new Error('profit close ' + JSON.stringify(s));
+
+// loss
+cash = 1000;
+const b2 = buy(cash, 1, 100)!;
+const s2 = sell(b2.cash, 1, 100, 1, 80)!;
+if (s2.cash !== 980 || s2.realized !== -20) throw new Error('loss ' + JSON.stringify(s2));
+
 console.log('trading-ledger checks passed');

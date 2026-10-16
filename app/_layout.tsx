@@ -25,6 +25,8 @@ export default function RootLayout() {
             <Stack.Screen name="activity" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="trade/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="payments/request" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="cards/edit" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen
               name="payments/amount"
               options={{
