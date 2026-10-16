@@ -1,6 +1,6 @@
 {
   "name": "justpay",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -35,7 +35,9 @@
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo-image-picker": "~16.0.6",
     "react-native-webview": "13.12.5",
-    "react-native-qrcode-svg": "6.3.14"
+    "react-native-qrcode-svg": "6.3.14",
+    "expo-haptics": "~14.0.1",
+    "expo-av": "~15.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

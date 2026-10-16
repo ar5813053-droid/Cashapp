@@ -5,16 +5,17 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { tapFeedback } from '../utils/feedback';
 
 type Props = PressableProps & {
   style?: StyleProp<ViewStyle>;
-  scaleTo?: number;
   children?: React.ReactNode;
+  haptic?: boolean;
 };
 
-export function PressableScale({ scaleTo = 0.96, style, children, onPressIn, onPressOut, ...rest }: Props) {
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function PressableScale({ style, children, onPress, haptic = true, ...rest }: Props) {
   const scale = useSharedValue(1);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -22,13 +23,15 @@ export function PressableScale({ scaleTo = 0.96, style, children, onPressIn, onP
     <AnimatedPressable
       {...rest}
       style={[style, anim]}
-      onPressIn={(e) => {
-        scale.value = withSpring(scaleTo, { damping: 16, stiffness: 320 });
-        onPressIn?.(e);
+      onPressIn={() => {
+        scale.value = withSpring(0.96, { damping: 15, stiffness: 400 });
       }}
-      onPressOut={(e) => {
-        scale.value = withSpring(1, { damping: 14, stiffness: 280 });
-        onPressOut?.(e);
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+      }}
+      onPress={(e) => {
+        if (haptic) tapFeedback();
+        onPress?.(e);
       }}
     >
       {children}

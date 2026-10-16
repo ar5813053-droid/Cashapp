@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,8 +6,10 @@ import { StyleSheet } from 'react-native';
 import { PaymentProvider } from '../src/context/PaymentContext';
 import { AppStoreProvider } from '../src/store/AppStore';
 import { colors } from '../src/design/tokens';
+import { initAudio } from '../src/utils/feedback';
 
 export default function RootLayout() {
+  useEffect(() => { initAudio(); }, []);
   return (
     <GestureHandlerRootView style={styles.root}>
       <AppStoreProvider>

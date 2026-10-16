@@ -173,10 +173,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   heroImage: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '70%',
   },
   heroImageStyle: {
-    // Soft crop: brightest glow sits lower (matches reference)
     resizeMode: 'cover',
   },
   heroFade: {

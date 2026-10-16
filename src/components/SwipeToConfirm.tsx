@@ -10,6 +10,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { colors, spacing, typography } from '../design/tokens';
+import { heavyTap } from '../utils/feedback';
 
 type Props = {
   onConfirm: () => void;
@@ -17,8 +18,8 @@ type Props = {
   disabled?: boolean;
 };
 
-const TRACK_WIDTH = 280;
-const THUMB = 52;
+const TRACK_WIDTH = 300;
+const THUMB = 56;
 
 export function SwipeToConfirm({
   onConfirm,
@@ -29,6 +30,7 @@ export function SwipeToConfirm({
   const confirmed = useSharedValue(false);
 
   const finish = () => {
+    heavyTap();
     onConfirm();
   };
 
@@ -55,7 +57,7 @@ export function SwipeToConfirm({
 
   const fillStyle = useAnimatedStyle(() => ({
     width: x.value + THUMB,
-    opacity: interpolate(x.value, [0, TRACK_WIDTH * 0.5], [0.15, 0.35], Extrapolation.CLAMP),
+    opacity: interpolate(x.value, [0, TRACK_WIDTH * 0.5], [0.2, 0.45], Extrapolation.CLAMP),
   }));
 
   return (
@@ -78,11 +80,16 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
   track: {
     width: TRACK_WIDTH,
-    height: THUMB + 8,
-    borderRadius: (THUMB + 8) / 2,
-    backgroundColor: '#F0F0F3',
+    height: THUMB + 10,
+    borderRadius: (THUMB + 10) / 2,
+    backgroundColor: '#ECECF0',
     justifyContent: 'center',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   fill: {
     position: 'absolute',
@@ -90,7 +97,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     backgroundColor: colors.accentGreen,
-    borderRadius: (THUMB + 8) / 2,
+    borderRadius: (THUMB + 10) / 2,
   },
   label: {
     ...typography.caption,
@@ -99,18 +106,23 @@ const styles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    left: 4,
+    left: 5,
     width: THUMB,
     height: THUMB,
     borderRadius: THUMB / 2,
-    backgroundColor: '#D8D8DE',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
   },
   thumbInner: {
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#B8B8C0',
+    backgroundColor: '#C5C5CE',
   },
 });

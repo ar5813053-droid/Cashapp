@@ -18,6 +18,7 @@ import { colors, spacing, radii, typography, layout } from '../../src/design/tok
 import { PressableScale } from '../../src/components/PressableScale';
 import { fetchMarketFeed, MARKET_CATALOG } from '../../src/mock-data/market';
 import { useAppStore } from '../../src/store/AppStore';
+import { profitFeedback, lossFeedback, successFeedback } from '../../src/utils/feedback';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_H = Math.max(320, Dimensions.get('window').height * 0.42);
@@ -117,17 +118,26 @@ export default function TradeScreen() {
     const r = buy(meta.symbol, meta.name, q, price);
     setBusy(false);
     if (!r.ok) Alert.alert('Rejected', r.error || 'Failed');
-    else Alert.alert('Filled (demo)', `Bought ${q} ${meta.symbol} @ $${price}`);
+    else {
+      successFeedback();
+      Alert.alert('Filled (demo)', `Bought ${q} ${meta.symbol} @ $${price}`);
+    }
   };
   const doSell = () => {
     const q = parseFloat(qty);
     if (!price) { Alert.alert('No price', 'Cannot trade without a market reference.'); return; }
     if (busy) return;
     setBusy(true);
+    const posBefore = state.positions.find((p) => p.symbol === meta.symbol);
     const r = sell(meta.symbol, q, price);
     setBusy(false);
     if (!r.ok) Alert.alert('Rejected', r.error || 'Failed');
-    else Alert.alert('Filled (demo)', `Sold ${q} ${meta.symbol} @ $${price}`);
+    else {
+      const avg = posBefore?.avgPrice ?? price;
+      if (price >= avg) profitFeedback();
+      else lossFeedback();
+      Alert.alert('Filled (demo)', `Sold ${q} ${meta.symbol} @ $${price}`);
+    }
   };
 
   const ChartBox = ({ height }: { height: number }) => (

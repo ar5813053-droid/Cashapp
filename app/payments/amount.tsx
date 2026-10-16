@@ -10,7 +10,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  FadeIn,
   FadeInDown,
   FadeOut,
   runOnJS,
@@ -20,16 +19,18 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radii, typography, layout } from '../../src/design/tokens';
+import { colors, spacing, radii, typography } from '../../src/design/tokens';
 import { DEMO_BALANCE, RECIPIENTS, CARDS, formatMoney } from '../../src/mock-data';
 import { usePayment } from '../../src/context/PaymentContext';
 import { Keypad } from '../../src/components/Keypad';
 import { SwipeToConfirm } from '../../src/components/SwipeToConfirm';
 import { PressableScale } from '../../src/components/PressableScale';
 import { evaluateExpression, isValidPaymentAmount } from '../../src/utils/safeCalc';
+import { successFeedback } from '../../src/utils/feedback';
 
 const H = Dimensions.get('window').height;
-const COLLAPSED = Math.min(H * 0.72, 620);
+// Taller sheet so swipe + keypad both fit
+const SHEET_H = Math.min(H * 0.88, 720);
 const DISMISS_Y = 120;
 
 export default function AmountScreen() {
@@ -55,6 +56,8 @@ export default function AmountScreen() {
   }, [backdrop, router, translateY]);
 
   const pan = Gesture.Pan()
+    .activeOffsetY(12)
+    .failOffsetX([-24, 24])
     .onUpdate((e) => {
       if (e.translationY > 0) translateY.value = e.translationY;
     })
@@ -70,7 +73,7 @@ export default function AmountScreen() {
     transform: [{ translateY: translateY.value }],
   }));
   const dimStyle = useAnimatedStyle(() => ({
-    opacity: backdrop.value * 0.45,
+    opacity: backdrop.value * 0.5,
   }));
 
   const evaluated = useMemo(() => evaluateExpression(expr), [expr]);
@@ -131,7 +134,8 @@ export default function AmountScreen() {
     if (!valid || processing) return;
     setAmount(value);
     setProcessing(true);
-    setTimeout(() => router.replace('/payments/success'), 650);
+    successFeedback();
+    setTimeout(() => router.replace('/payments/success'), 700);
   };
 
   return (
@@ -145,7 +149,7 @@ export default function AmountScreen() {
           style={[
             styles.sheet,
             sheetStyle,
-            { height: COLLAPSED + insets.bottom, paddingBottom: insets.bottom + 8 },
+            { height: SHEET_H + insets.bottom, paddingBottom: Math.max(insets.bottom, 10) },
           ]}
         >
           <View style={styles.handle} />
@@ -170,6 +174,7 @@ export default function AmountScreen() {
             {recipient.name} · {card.last4} USD
           </Text>
 
+          {/* Compact amount so keypad sits higher and slider is fully visible */}
           <View style={styles.amountWrap}>
             <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
               {displayMain}
@@ -178,20 +183,21 @@ export default function AmountScreen() {
             <Text style={styles.available}>Available {formatMoney(DEMO_BALANCE)}</Text>
           </View>
 
-          {valid ? (
-            <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut}>
-              {processing ? (
-                <View style={styles.processing}>
-                  <ActivityIndicator color={colors.textDark} />
-                  <Text style={styles.processingText}>Processing simulation…</Text>
-                </View>
-              ) : (
-                <SwipeToConfirm onConfirm={onConfirm} />
-              )}
-            </Animated.View>
-          ) : (
-            <View style={styles.swipePlaceholder} />
-          )}
+          {/* Slider zone — always reserved height when valid so it never clips under keypad */}
+          <View style={styles.swipeZone}>
+            {valid ? (
+              <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut}>
+                {processing ? (
+                  <View style={styles.processing}>
+                    <ActivityIndicator color={colors.textDark} />
+                    <Text style={styles.processingText}>Processing simulation…</Text>
+                  </View>
+                ) : (
+                  <SwipeToConfirm onConfirm={onConfirm} />
+                )}
+              </Animated.View>
+            ) : null}
+          </View>
 
           <View style={styles.keypadArea}>
             <Keypad
@@ -217,20 +223,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgSheet,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingTop: 8,
-    shadowColor: '#3B82F6',
-    shadowOpacity: 0.25,
+    paddingTop: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
     shadowRadius: 24,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 20,
+    shadowOffset: { width: 0, height: -8 },
+    elevation: 24,
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D8D8DE',
-    marginBottom: 8,
+    backgroundColor: '#D0D0D6',
+    marginBottom: 6,
   },
   tabs: {
     flexDirection: 'row',
@@ -238,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.lg,
   },
-  tabPill: { paddingHorizontal: spacing.lg, paddingVertical: 6, borderRadius: radii.full },
+  tabPill: { paddingHorizontal: spacing.lg, paddingVertical: 5, borderRadius: radii.full },
   tabPillOn: { backgroundColor: colors.pillDark },
   tab: { ...typography.section, color: colors.textDarkMuted },
   tabOn: { color: colors.textDark, fontWeight: '700' },
@@ -246,24 +252,47 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textDarkSecondary,
     textAlign: 'center',
-    marginTop: spacing.sm,
+    marginTop: 6,
   },
-  amountWrap: { alignItems: 'center', marginTop: spacing.lg, minHeight: 88 },
-  amount: { ...typography.amountLarge, color: colors.textDark, maxWidth: '90%' },
-  preview: { ...typography.body, color: colors.textDarkMuted, marginTop: 4 },
-  available: { ...typography.caption, color: colors.textDarkMuted, marginTop: 4 },
-  swipePlaceholder: { height: 12 },
+  amountWrap: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: 4,
+    minHeight: 64,
+  },
+  amount: {
+    fontSize: 48,
+    fontWeight: '700',
+    letterSpacing: -1.2,
+    color: colors.textDark,
+    maxWidth: '90%',
+  },
+  preview: { ...typography.body, color: colors.textDarkMuted, marginTop: 2 },
+  available: { ...typography.caption, color: colors.textDarkMuted, marginTop: 2 },
+  swipeZone: {
+    minHeight: 78,
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   processing: { alignItems: 'center', gap: 8, paddingVertical: 12 },
   processingText: { ...typography.caption, color: colors.textDarkSecondary },
-  keypadArea: { flex: 1, justifyContent: 'flex-end' },
+  keypadArea: {
+    flexGrow: 0,
+    paddingBottom: 4,
+  },
   equals: {
     alignSelf: 'center',
-    marginBottom: 8,
+    marginTop: 4,
+    marginBottom: 4,
     backgroundColor: colors.textDark,
     paddingHorizontal: 28,
-    height: 36,
-    borderRadius: 18,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   equalsText: { color: '#fff', fontWeight: '700', fontSize: 18 },
 });
